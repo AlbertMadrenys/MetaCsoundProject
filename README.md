@@ -19,10 +19,6 @@ A filepath to the `.csd` file needs to be provided. This Csound file will be pla
 Optional input parameters include audio, a control-rate channel, and Csound events described
 by a string and a MetaSounds event.
 
-Please by wary that for now, all paths used are full paths, that will probably work on the machine of the author.
-In order to use it in your own machine, change the paths int the `MetaCsound.Build.cs` for linking the library
-correctly, as well as the path to the Csound file present in the `MSS_Wind` graph.
-
 Please note that for now, all paths used are full paths that will likely only work on the author's machine.
 To use this project on your own machine, you will need to change the paths in the `MetaCsound.Build.cs` file
 to correctly link the library, as well as the path to the Csound file present in the `MSS_Wind` graph.
