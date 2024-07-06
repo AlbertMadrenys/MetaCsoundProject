@@ -24,8 +24,9 @@ instr 1
 	kamp chnget "InK_0"
 	kamp2 chnget "InK_1"
 	//kamp init 0.5
+	//kamp2 init 0.5
 	
-	//chnset kamp, "OutK_0"
+	chnset kamp, "OutK_0"
 	chnset kamp2, "OutK_1"
 	
 	out ain1*aosc1*(kamp), ain2*aosc2*0.2*kamp2		;multiply output of iscil by incoming signal
@@ -37,80 +38,16 @@ aout vco2 0.05, 220
 outs aout, aout
 endin
 
-schedule(1, 0, -1);
+//schedule(1, 0, -1);
 //schedule(2, 0, 3)
 
 </CsInstruments>
 <CsScore>
-//i2 0 3
+i2 0 3
 //f0 z
 </CsScore>
 
 </CsoundSynthesizer>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <bsbPanel>
  <label>Widgets</label>
  <objectName/>

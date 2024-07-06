@@ -77,6 +77,7 @@ namespace MetaCsound
             , m_SpIndex(0)
             , m_Spin()
             , m_Spout()
+            , m_Finished(false)
             // More variables still missing WIP
         {
             const char* csdFilePath = StringCast<ANSICHAR>(**m_FilePath.Get()).Get();
@@ -149,6 +150,8 @@ namespace MetaCsound
         // Primary node functionality
         void Execute()
         {
+            if (m_Finished) return;
+
             if (m_EventTrigger->IsTriggeredInBlock())
             {
                 // WIP Does Csound work in sample accurate score line events? Use a string queue, handled by another node
@@ -164,7 +167,6 @@ namespace MetaCsound
                 {
                     // WIP Use version of Csound that uses floats instead of doubles?
                     m_Spin[m_SpIndex * m_CsoundNchnlsIn + i] = (double)(m_InBuffers[i][f]);
-                    //float a = m_InBuffers[i][f];
                 }
                 
                 for (size_t i = 0; i < m_MinAudioOut; i++)
@@ -180,18 +182,32 @@ namespace MetaCsound
                         m_CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*m_InControlNames[i]).Get(), (double)*(m_InControlRefs[i]));
                     }
 
-                    m_CsoundInstance.PerformKsmps();
+                    m_Finished = (bool)m_CsoundInstance.PerformKsmps();
                     m_SpIndex = 0;
+
+                    if (m_Finished)
+                    {
+                        ClearChannels();
+                        return;
+                    }
                     
                     for (size_t i = 0; i < m_OutControlRefs.Num(); i++)
                     {
                         *(m_OutControlRefs[i]) = (float)m_CsoundInstance.GetControlChannel(StringCast<ANSICHAR>(*m_OutControlNames[i]).Get());
                     }
 
-                    // OnFinished event trigger
                     // csound.destroy and csound.compile to recompile to make it like a loop
                 }
             }
+        }
+
+        void ClearChannels()
+        {
+            for (size_t i = 0; i < m_OutAudioRefs.Num(); i++)
+                m_OutAudioRefs[i]->Zero();
+
+            for (size_t i = 0; i < m_OutControlRefs.Num(); i++)
+                *m_OutControlRefs[i] = 0.;
         }
 
         static const FNodeClassMetadata& GetNodeInfo()
@@ -343,6 +359,7 @@ namespace MetaCsound
         FOperatorSettings m_OpSettings;
         Csound m_CsoundInstance;
         uint32 m_SpIndex;
+        bool m_Finished;
 
         double *m_Spin, *m_Spout;
         size_t m_CsoundNchnlsIn, m_CsoundNchnlsOut, m_MinAudioIn, m_MinAudioOut;
