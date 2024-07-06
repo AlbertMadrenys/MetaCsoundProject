@@ -1,3 +1,5 @@
+#pragma once
+
 // Is this still necessary? WIP
 #ifdef LIKELY
     #undef LIKELY
@@ -42,6 +44,7 @@ namespace MetaCsound
     METASOUND_PARAM(CsoundFilePath, "File", "Path of the .csd file to be executed by Csound");
     METASOUND_PARAM(EventString, "Event String", "The string that contains a Csound event");
     METASOUND_PARAM(EventTrigger, "Event Trigger", "Triggers the Csound event descrived by EventString");
+    METASOUND_PARAM(FinishedTrigger, "On Finished", "Triggers when the Csound score has finished");
 
     METASOUND_PARAM(InA, "In Audio {0}", "Input audio {0}");
     METASOUND_PARAM(OutA, "Out Audio {0}", "Output audio {0}");
@@ -64,6 +67,7 @@ namespace MetaCsound
             : m_FilePath(FilePath)
             , m_EventString(EventString)
             , m_EventTrigger(EventTrigger)
+            , m_FinishedTrigger(FTriggerWriteRef::CreateNew(InSettings))
             , m_InAudioRefs(InAudioRefs)
             , m_InBuffers()
             , m_OutAudioRefs()
@@ -150,7 +154,12 @@ namespace MetaCsound
         // Primary node functionality
         void Execute()
         {
-            if (m_Finished) return;
+            if (m_Finished)
+            {
+                m_FinishedTrigger->AdvanceBlock();
+                return;
+            }
+                
 
             if (m_EventTrigger->IsTriggeredInBlock())
             {
@@ -187,6 +196,7 @@ namespace MetaCsound
 
                     if (m_Finished)
                     {
+                        m_FinishedTrigger->TriggerFrame(f);
                         ClearChannels();
                         return;
                     }
@@ -199,6 +209,8 @@ namespace MetaCsound
                     // csound.destroy and csound.compile to recompile to make it like a loop
                 }
             }
+
+            //m_FinishedTrigger->AdvanceBlock();
         }
 
         void ClearChannels()
@@ -247,6 +259,7 @@ namespace MetaCsound
             inVer.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(EventTrigger)));
             
             FOutputVertexInterface outVer;
+            outVer.Add(TOutputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(FinishedTrigger)));
             for (uint32 i = 0; i < _numAudioChannelsOut; i++)
                 outVer.Add(TOutputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutA, i)));
             for (uint32 i = 0; i < _numControlChannelsOut; i++)
@@ -278,6 +291,8 @@ namespace MetaCsound
         virtual FDataReferenceCollection GetOutputs() const override
         {
             FDataReferenceCollection OutputDataReferences;
+
+            OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(FinishedTrigger), m_FinishedTrigger);
 
             for (uint32 i = 0; i < _numAudioChannelsOut; i++)
                 OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutA, i), m_OutAudioRefs[i]);
@@ -345,6 +360,7 @@ namespace MetaCsound
         FStringReadRef m_FilePath;
         FStringReadRef m_EventString;
         FTriggerReadRef m_EventTrigger;
+        FTriggerWriteRef m_FinishedTrigger;
 
         TArray<FAudioBufferReadRef> m_InAudioRefs;
         TArray<const float*> m_InBuffers;
