@@ -51,8 +51,8 @@ namespace MetaCsound
     template<typename DerivedOperator>
     class TCsoundOperator : public TExecutableOperator<DerivedOperator>
     {
-    public:
-        // Constructor
+    protected:
+        // Protected constructor
         TCsoundOperator(const FOperatorSettings& InSettings,
             const FStringReadRef& InFilePath,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
@@ -146,6 +146,8 @@ namespace MetaCsound
             
         };
 
+    public:
+
         // Primary node functionality
         void Execute()
         {
@@ -154,7 +156,6 @@ namespace MetaCsound
                 FinishedTrigger->AdvanceBlock();
                 return;
             }
-                
 
             if (EventTrigger->IsTriggeredInBlock())
             {
@@ -217,6 +218,29 @@ namespace MetaCsound
             {
                 *ControlOutRefs[i] = 0.;
             }
+        }
+
+        static const FNodeClassMetadata& GetNodeInfo()
+        {
+            auto CreateNodeClassMetadata = []() -> FNodeClassMetadata
+                {
+                    FNodeClassMetadata Info;
+                    Info.ClassName = DerivedOperator::GetClassName();
+                    Info.MajorVersion = 1;
+                    Info.MinorVersion = 0;
+                    Info.DisplayName = DerivedOperator::GetDisplayName();
+                    Info.Description = DerivedOperator::GetDescription();
+                    Info.Author = TEXT("Albert Madrenys Planas");
+                    Info.PromptIfMissing = Metasound::PluginNodeMissingPrompt;
+                    Info.DefaultInterface = DeclareVertexInterface();
+                    Info.CategoryHierarchy = { LOCTEXT("MetaCsound_NodeCategory", "Csound") };
+
+                    return Info;
+                };
+
+            // WIP put this as a static member of the class?
+            static const FNodeClassMetadata Metadata = CreateNodeClassMetadata();
+            return Metadata;
         }
 
         static const FVertexInterface& DeclareVertexInterface()
@@ -395,28 +419,21 @@ namespace MetaCsound
         )
         { }
 
-        static const FNodeClassMetadata& GetNodeInfo()
+        // WIP return by reference? Use of constexpr instead? inline?
+        static const FNodeClassName GetClassName() 
         {
-            auto CreateNodeClassMetadata = []() -> FNodeClassMetadata
-                {
-                    FNodeClassMetadata Info;
+            // WIP What is Audio? Could we use "Csound" instead?
+            return { TEXT("MetaCsound"), TEXT("Csound 2"), TEXT("Audio") }; 
+        }
 
-                    Info.ClassName = { TEXT("UE"), TEXT("Csound 2"), TEXT("Audio 2") };
-                    Info.MajorVersion = 1;
-                    Info.MinorVersion = 0;
-                    Info.DisplayName = LOCTEXT("Metasound_CsoundNodeDisplayName", "Csound 2");
-                    Info.Description = LOCTEXT("Metasound_CsoundNodeDesc", "Csound 2 description");
-                    Info.Author = PluginAuthor; // WIP Add my name here
-                    Info.PromptIfMissing = PluginNodeMissingPrompt;
-                    Info.DefaultInterface = DeclareVertexInterface();
-                    Info.CategoryHierarchy = { LOCTEXT("Metasound_CsoundNodeCategory", "Utils") };
+        static const FText GetDisplayName()
+        {
+            return LOCTEXT("MetaCsound_NodeDisplayName", "Csound 2");
+        }
 
-                    return Info;
-                };
-
-            // WIP put this as a static member of the class?
-            static const FNodeClassMetadata Metadata = CreateNodeClassMetadata();
-            return Metadata;
+        static const FText GetDescription()
+        {
+            return LOCTEXT("MetaCsound_NodeDesc", "Csound 2 description");
         }
 
         static constexpr uint32 NumAudioChannelsIn = 2;
@@ -434,11 +451,12 @@ namespace MetaCsound
     };
 
     // Register node
-    METASOUND_REGISTER_NODE(FCsoundNode2);
+    METASOUND_REGISTER_NODE(FCsoundNode2); // WIP Node registration using module startup/shutdown?
 
     class FCsoundOperator4 : public TCsoundOperator<FCsoundOperator4>
     {
     public:
+        
         FCsoundOperator4(const FOperatorSettings& InSettings,
             const FStringReadRef& InFilePath,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
@@ -454,28 +472,21 @@ namespace MetaCsound
         )
         { }
 
-        static const FNodeClassMetadata& GetNodeInfo()
+        // WIP inline?
+        static const FNodeClassName GetClassName()
         {
-            auto CreateNodeClassMetadata = []() -> FNodeClassMetadata
-                {
-                    FNodeClassMetadata Info;
+            // WIP What is Audio? Could we change it to something like "Csound" instead?
+            return { TEXT("MetaCsound"), TEXT("Csound 4"), TEXT("Audio") };
+        }
 
-                    Info.ClassName = { TEXT("UE"), TEXT("Csound 4"), TEXT("Audio 4") };
-                    Info.MajorVersion = 1;
-                    Info.MinorVersion = 0;
-                    Info.DisplayName = LOCTEXT("Metasound_CsoundNodeDisplayName", "Csound 4");
-                    Info.Description = LOCTEXT("Metasound_CsoundNodeDesc", "Csound 4 description");
-                    Info.Author = PluginAuthor; // WIP Add my name here
-                    Info.PromptIfMissing = PluginNodeMissingPrompt;
-                    Info.DefaultInterface = DeclareVertexInterface();
-                    Info.CategoryHierarchy = { LOCTEXT("Metasound_CsoundNodeCategory", "Utils") };
+        static const FText GetDisplayName()
+        {
+            return LOCTEXT("MetaCsound_NodeDisplayName", "Csound 4");
+        }
 
-                    return Info;
-                };
-
-            // WIP put this as a static member of the class?
-            static const FNodeClassMetadata Metadata = CreateNodeClassMetadata();
-            return Metadata;
+        static const FText GetDescription()
+        {
+            return LOCTEXT("MetaCsound_NodeDesc", "Csound 4 description");
         }
 
         static constexpr uint32 NumAudioChannelsIn = 4;
