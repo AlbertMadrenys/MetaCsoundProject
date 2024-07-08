@@ -21,7 +21,6 @@ THIRD_PARTY_INCLUDES_END
 #include "MetasoundParamHelper.h"            // METASOUND_PARAM and METASOUND_GET_PARAM family of macros
 //#include "MetasoundNodeInterface.h"
 #include "Containers/Array.h"
-//#include "Containers/StaticArray.h"
 //#include "GenericPlatform/StandardPlatformString.h"
 
 // Required for ensuring the node is supported by all languages in engine. Must be unique per MetaSound.
@@ -77,17 +76,22 @@ namespace MetaCsound
             , OpSettings(InSettings)
             , CsoundInstance()
             , SpIndex(0)
-            , bFinished(false)
             , Spin(nullptr)
             , Spout(nullptr)
+            , OpState(EOpState::Playing)
             // More variables still missing WIP
         {
             const char* CsdFilePath = StringCast<ANSICHAR>(**FilePath.Get()).Get();
             FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
             const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
 
-            // WIP make not explode it when compilation error
-            CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
+            int32 ErrorCode = CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
+            if (ErrorCode != 0)
+            {
+                // WIP show the error to the developer?
+                OpState = EOpState::Error;
+                return;
+            }
 
             Spin = CsoundInstance.GetSpin();
             Spout = CsoundInstance.GetSpout();
@@ -151,7 +155,7 @@ namespace MetaCsound
         // Primary node functionality
         void Execute()
         {
-            if (bFinished)
+            if (OpState == EOpState::Stopped || OpState == EOpState::Error)
             {
                 FinishedTrigger->AdvanceBlock();
                 return;
@@ -187,11 +191,11 @@ namespace MetaCsound
                         CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*ControlInNames[i]).Get(), (double)*(ControlInRefs[i]));
                     }
 
-                    bFinished = (bool)CsoundInstance.PerformKsmps();
                     SpIndex = 0;
-
-                    if (bFinished)
+                    int32 FinishedCode = CsoundInstance.PerformKsmps();
+                    if (FinishedCode != 0)
                     {
+                        OpState = EOpState::Stopped;
                         FinishedTrigger->TriggerFrame(f);
                         ClearChannels();
                         return;
@@ -202,7 +206,7 @@ namespace MetaCsound
                         *(ControlOutRefs[i]) = (float)CsoundInstance.GetControlChannel(StringCast<ANSICHAR>(*ControlOutNames[i]).Get());
                     }
 
-                    // csound.destroy and csound.compile to recompile to make it like a loop
+                    // WIP csound.destroy and csound.compile or reset to recompile to make it like a loop?
                 }
             }
         }
@@ -394,11 +398,19 @@ namespace MetaCsound
         FOperatorSettings OpSettings;
         Csound CsoundInstance;
         int32 SpIndex;
-        bool bFinished;
 
         double* Spin, * Spout;
         int32 CsoundNchnlsIn, CsoundNchnlsOut, MinAudioIn, MinAudioOut;
         int32 CsoundKsmps;
+
+        enum class EOpState : uint8
+        {
+            Stopped,
+            Playing,
+            Error
+        };
+
+        EOpState OpState;
     };
 
     class FCsoundOperator2 : public TCsoundOperator<FCsoundOperator2>
