@@ -36,7 +36,7 @@ namespace Metasound
 // WIP: Should I use namespace Metasound?
 namespace MetaCsound
 {
-    using namespace Metasound;
+    using namespace Metasound; // WIP Is this correct?
 
     METASOUND_PARAM(FilePath, "File", "Path of the .csd file to be executed by Csound");
     METASOUND_PARAM(EvStr, "Event String", "The string that contains a Csound event");
@@ -48,11 +48,12 @@ namespace MetaCsound
     METASOUND_PARAM(InK, "In Control {0}", "Input control {0}");
     METASOUND_PARAM(OutK, "Out Control {0}", "Output control {0}");
 
-    class FCsoundOperator : public TExecutableOperator<FCsoundOperator>
+    template<typename DerivedOperator>
+    class TCsoundOperator : public TExecutableOperator<DerivedOperator>
     {
     public:
         // Constructor
-        FCsoundOperator(const FOperatorSettings& InSettings,
+        TCsoundOperator(const FOperatorSettings& InSettings,
             const FStringReadRef& InFilePath,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const size_t& InNumOutAudioChannels, // WIP Should I use uint8 or size_t?
@@ -76,9 +77,9 @@ namespace MetaCsound
             , OpSettings(InSettings)
             , CsoundInstance()
             , SpIndex(0)
-            , Spin()
-            , Spout()
             , bFinished(false)
+            , Spin(nullptr)
+            , Spout(nullptr)
             // More variables still missing WIP
         {
             const char* CsdFilePath = StringCast<ANSICHAR>(**FilePath.Get()).Get();
@@ -218,41 +219,17 @@ namespace MetaCsound
             }
         }
 
-        static const FNodeClassMetadata& GetNodeInfo()
-        {
-            auto CreateNodeClassMetadata = []() -> FNodeClassMetadata
-                {
-                    FNodeClassMetadata Info;
-
-                    Info.ClassName = { TEXT("UE"), TEXT("Csound"), TEXT("Audio") };
-                    Info.MajorVersion = 1;
-                    Info.MinorVersion = 0;
-                    Info.DisplayName = LOCTEXT("Metasound_CsoundNodeDisplayName", "Csound");
-                    Info.Description = LOCTEXT("Metasound_CsoundNodeDesc", "Csound description");
-                    Info.Author = PluginAuthor; // WIP Add my name here
-                    Info.PromptIfMissing = PluginNodeMissingPrompt;
-                    Info.DefaultInterface = DeclareVertexInterface();
-                    Info.CategoryHierarchy = { LOCTEXT("Metasound_CsoundNodeCategory", "Utils") };
-
-                    return Info;
-                };
-
-            // WIP put this as a static member of the class?
-            static const FNodeClassMetadata Metadata = CreateNodeClassMetadata();
-            return Metadata;
-        }
-
         static const FVertexInterface& DeclareVertexInterface()
         {
             FInputVertexInterface InputVertex;
             InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(FilePath)));
 
-            for (uint32 i = 0; i < NumAudioChannelsIn; i++)
+            for (uint32 i = 0; i < DerivedOperator::NumAudioChannelsIn; i++)
             {
                 InputVertex.Add(TInputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InA, i)));
             }
                 
-            for (uint32 i = 0; i < NumControlChannelsIn; i++)
+            for (uint32 i = 0; i < DerivedOperator::NumControlChannelsIn; i++)
             {
                 InputVertex.Add(TInputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InK, i)));
             }
@@ -263,12 +240,12 @@ namespace MetaCsound
             
             FOutputVertexInterface OutputVertex;
             OutputVertex.Add(TOutputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(FinTrig)));
-            for (uint32 i = 0; i < NumAudioChannelsOut; i++)
+            for (uint32 i = 0; i < DerivedOperator::NumAudioChannelsOut; i++)
             {
                 OutputVertex.Add(TOutputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutA, i)));
             }
                 
-            for (uint32 i = 0; i < NumControlChannelsOut; i++)     
+            for (uint32 i = 0; i < DerivedOperator::NumControlChannelsOut; i++)
             {
                 OutputVertex.Add(TOutputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutK, i)));
             }
@@ -333,8 +310,8 @@ namespace MetaCsound
                 (InputInterface, METASOUND_GET_PARAM_NAME(EvTrig), InParams.OperatorSettings);
 
             TArray<TDataReadReference<FAudioBuffer>> AudioInArray;
-            AudioInArray.Empty(NumAudioChannelsIn);
-            for (uint32 i = 0; i < NumAudioChannelsIn; i++)
+            AudioInArray.Empty(DerivedOperator::NumAudioChannelsIn);
+            for (uint32 i = 0; i < DerivedOperator::NumAudioChannelsIn; i++)
             { 
                 AudioInArray.Add(TDataReadReference<FAudioBuffer>
                 (
@@ -348,8 +325,8 @@ namespace MetaCsound
             }
 
             TArray<TDataReadReference<float>> ControlInArray;
-            ControlInArray.Empty(NumControlChannelsIn);
-            for (uint32 i = 0; i < NumControlChannelsIn; i++)
+            ControlInArray.Empty(DerivedOperator::NumControlChannelsIn);
+            for (uint32 i = 0; i < DerivedOperator::NumControlChannelsIn; i++)
             {
                 ControlInArray.Add(TDataReadReference<float>
                 (
@@ -362,13 +339,13 @@ namespace MetaCsound
                 ));
             }
 
-            return MakeUnique<FCsoundOperator>(
+            return MakeUnique<DerivedOperator>(
                 InParams.OperatorSettings,
                 CsoundFP,
                 AudioInArray,
-                NumAudioChannelsOut,
+                DerivedOperator::NumAudioChannelsOut,
                 ControlInArray,
-                NumControlChannelsOut,
+                DerivedOperator::NumControlChannelsOut,
                 EvString,
                 EvTrigger
             );
@@ -398,23 +375,125 @@ namespace MetaCsound
         double* Spin, * Spout;
         size_t CsoundNchnlsIn, CsoundNchnlsOut, MinAudioIn, MinAudioOut;
         uint32 CsoundKsmps;
-
-        static const uint32 NumAudioChannelsIn = 2;
-        static const uint32 NumAudioChannelsOut = 2;
-        static const uint32 NumControlChannelsIn = 2;
-        static const uint32 NumControlChannelsOut = 1;
     };
 
-    class FCsoundNode : public FNodeFacade
+    class FCsoundOperator2 : public TCsoundOperator<FCsoundOperator2>
     {
     public:
-        FCsoundNode(const FNodeInitData& InitData) : FNodeFacade(InitData.InstanceName, InitData.InstanceID,
-            TFacadeOperatorClass<FCsoundOperator>())
+        FCsoundOperator2(const FOperatorSettings& InSettings,
+            const FStringReadRef& InFilePath,
+            const TArray<FAudioBufferReadRef>& InAudioRefs,
+            const size_t& InNumOutAudioChannels, // WIP Should I use uint8 or size_t?
+            const TArray<FFloatReadRef>& InControlRefs,
+            const size_t& InNumOutControlChannels, // WIP Should I use uint8 or size_t?
+            const FStringReadRef& InEventString,
+            const FTriggerReadRef& InEventTrigger
+        )
+        : TCsoundOperator(
+            InSettings, InFilePath, InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
+            InEventString, InEventTrigger
+        )
+        { }
+
+        static const FNodeClassMetadata& GetNodeInfo()
+        {
+            auto CreateNodeClassMetadata = []() -> FNodeClassMetadata
+                {
+                    FNodeClassMetadata Info;
+
+                    Info.ClassName = { TEXT("UE"), TEXT("Csound 2"), TEXT("Audio 2") };
+                    Info.MajorVersion = 1;
+                    Info.MinorVersion = 0;
+                    Info.DisplayName = LOCTEXT("Metasound_CsoundNodeDisplayName", "Csound 2");
+                    Info.Description = LOCTEXT("Metasound_CsoundNodeDesc", "Csound 2 description");
+                    Info.Author = PluginAuthor; // WIP Add my name here
+                    Info.PromptIfMissing = PluginNodeMissingPrompt;
+                    Info.DefaultInterface = DeclareVertexInterface();
+                    Info.CategoryHierarchy = { LOCTEXT("Metasound_CsoundNodeCategory", "Utils") };
+
+                    return Info;
+                };
+
+            // WIP put this as a static member of the class?
+            static const FNodeClassMetadata Metadata = CreateNodeClassMetadata();
+            return Metadata;
+        }
+
+        static constexpr uint32 NumAudioChannelsIn = 2;
+        static constexpr uint32 NumAudioChannelsOut = 2;
+        static constexpr uint32 NumControlChannelsIn = 2;
+        static constexpr uint32 NumControlChannelsOut = 2;
+    };
+
+    class FCsoundNode2 : public FNodeFacade
+    {
+    public:
+        FCsoundNode2(const FNodeInitData& InitData) : FNodeFacade(InitData.InstanceName, InitData.InstanceID,
+            TFacadeOperatorClass<FCsoundOperator2>())
         { }
     };
 
     // Register node
-    METASOUND_REGISTER_NODE(FCsoundNode);
+    METASOUND_REGISTER_NODE(FCsoundNode2);
+
+    class FCsoundOperator4 : public TCsoundOperator<FCsoundOperator4>
+    {
+    public:
+        FCsoundOperator4(const FOperatorSettings& InSettings,
+            const FStringReadRef& InFilePath,
+            const TArray<FAudioBufferReadRef>& InAudioRefs,
+            const size_t& InNumOutAudioChannels, // WIP Should I use uint8 or size_t?
+            const TArray<FFloatReadRef>& InControlRefs,
+            const size_t& InNumOutControlChannels, // WIP Should I use uint8 or size_t?
+            const FStringReadRef& InEventString,
+            const FTriggerReadRef& InEventTrigger
+        )
+        : TCsoundOperator(
+            InSettings, InFilePath, InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
+            InEventString, InEventTrigger
+        )
+        { }
+
+        static const FNodeClassMetadata& GetNodeInfo()
+        {
+            auto CreateNodeClassMetadata = []() -> FNodeClassMetadata
+                {
+                    FNodeClassMetadata Info;
+
+                    Info.ClassName = { TEXT("UE"), TEXT("Csound 4"), TEXT("Audio 4") };
+                    Info.MajorVersion = 1;
+                    Info.MinorVersion = 0;
+                    Info.DisplayName = LOCTEXT("Metasound_CsoundNodeDisplayName", "Csound 4");
+                    Info.Description = LOCTEXT("Metasound_CsoundNodeDesc", "Csound 4 description");
+                    Info.Author = PluginAuthor; // WIP Add my name here
+                    Info.PromptIfMissing = PluginNodeMissingPrompt;
+                    Info.DefaultInterface = DeclareVertexInterface();
+                    Info.CategoryHierarchy = { LOCTEXT("Metasound_CsoundNodeCategory", "Utils") };
+
+                    return Info;
+                };
+
+            // WIP put this as a static member of the class?
+            static const FNodeClassMetadata Metadata = CreateNodeClassMetadata();
+            return Metadata;
+        }
+
+        static constexpr uint32 NumAudioChannelsIn = 4;
+        static constexpr uint32 NumAudioChannelsOut = 4;
+        static constexpr uint32 NumControlChannelsIn = 4;
+        static constexpr uint32 NumControlChannelsOut = 4;
+    };
+
+    class FCsoundNode4 : public FNodeFacade
+    {
+    public:
+        FCsoundNode4(const FNodeInitData& InitData) : FNodeFacade(InitData.InstanceName, InitData.InstanceID,
+            TFacadeOperatorClass<FCsoundOperator4>())
+        { }
+    };
+
+    // Register node
+    METASOUND_REGISTER_NODE(FCsoundNode4);
 }
 
 #undef LOCTEXT_NAMESPACE
