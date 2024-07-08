@@ -428,12 +428,12 @@ namespace MetaCsound
 
         static const FText GetDisplayName()
         {
-            return LOCTEXT("MetaCsound_NodeDisplayName", "Csound 2");
+            return LOCTEXT("MetaCsound_Node2DisplayName", "Csound 2");
         }
 
         static const FText GetDescription()
         {
-            return LOCTEXT("MetaCsound_NodeDesc", "Csound 2 description");
+            return LOCTEXT("MetaCsound_Node2Desc", "Csound 2 description");
         }
 
         static constexpr int32 NumAudioChannelsIn = 2;
@@ -481,12 +481,12 @@ namespace MetaCsound
 
         static const FText GetDisplayName()
         {
-            return LOCTEXT("MetaCsound_NodeDisplayName", "Csound 4");
+            return LOCTEXT("MetaCsound_Node2DisplayName", "Csound 4");
         }
 
         static const FText GetDescription()
         {
-            return LOCTEXT("MetaCsound_NodeDesc", "Csound 4 description");
+            return LOCTEXT("MetaCsound_Node2Desc", "Csound 4 description");
         }
 
         static constexpr int32 NumAudioChannelsIn = 4;
