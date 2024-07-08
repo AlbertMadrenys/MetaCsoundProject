@@ -38,13 +38,10 @@ namespace MetaCsound
 {
     using namespace Metasound;
 
-    //static const TArray<TCHAR*> hi = { TEXT("InControl_1"), TEXT("InControl_2"),
-    //    TEXT("InControl_1"), TEXT("InControl_1") };
-
-    METASOUND_PARAM(CsoundFilePath, "File", "Path of the .csd file to be executed by Csound");
-    METASOUND_PARAM(EventString, "Event String", "The string that contains a Csound event");
-    METASOUND_PARAM(EventTrigger, "Event Trigger", "Triggers the Csound event descrived by EventString");
-    METASOUND_PARAM(FinishedTrigger, "On Finished", "Triggers when the Csound score has finished");
+    METASOUND_PARAM(FilePath, "File", "Path of the .csd file to be executed by Csound");
+    METASOUND_PARAM(EvStr, "Event String", "The string that contains a Csound event");
+    METASOUND_PARAM(EvTrig, "Event Trigger", "Triggers the Csound event descrived by EventString");
+    METASOUND_PARAM(FinTrig, "On Finished", "Triggers when the Csound score has finished");
 
     METASOUND_PARAM(InA, "In Audio {0}", "Input audio {0}");
     METASOUND_PARAM(OutA, "Out Audio {0}", "Output audio {0}");
@@ -56,48 +53,48 @@ namespace MetaCsound
     public:
         // Constructor
         FCsoundOperator(const FOperatorSettings& InSettings,
-            const FStringReadRef& FilePath,
+            const FStringReadRef& InFilePath,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
-            const size_t& NumOutAudioChannels, // WIP Should I use uint8 or size_t?
+            const size_t& InNumOutAudioChannels, // WIP Should I use uint8 or size_t?
             const TArray<FFloatReadRef>& InControlRefs,
-            const size_t& NumOutControlChannels, // WIP Should I use uint8 or size_t?
-            const FStringReadRef& EventString,
-            const FTriggerReadRef& EventTrigger
+            const size_t& InNumOutControlChannels, // WIP Should I use uint8 or size_t?
+            const FStringReadRef& InEventString,
+            const FTriggerReadRef& InEventTrigger
             )
-            : m_FilePath(FilePath)
-            , m_EventString(EventString)
-            , m_EventTrigger(EventTrigger)
-            , m_FinishedTrigger(FTriggerWriteRef::CreateNew(InSettings))
-            , m_InAudioRefs(InAudioRefs)
-            , m_InBuffers()
-            , m_OutAudioRefs()
-            , m_OutBuffers()
-            , m_InControlRefs(InControlRefs)
-            , m_InControlNames()
-            , m_OutControlRefs()
-            , m_OutControlNames()
-            , m_OpSettings(InSettings)
-            , m_CsoundInstance()
-            , m_SpIndex(0)
-            , m_Spin()
-            , m_Spout()
-            , m_Finished(false)
+            : FilePath(InFilePath)
+            , EventString(InEventString)
+            , EventTrigger(InEventTrigger)
+            , FinishedTrigger(FTriggerWriteRef::CreateNew(InSettings))
+            , AudioInRefs(InAudioRefs)
+            , BuffersIn()
+            , AudioOutRefs()
+            , BuffersOut()
+            , ControlInRefs(InControlRefs)
+            , ControlInNames()
+            , ControlOutRefs()
+            , ControlOutNames()
+            , OpSettings(InSettings)
+            , CsoundInstance()
+            , SpIndex(0)
+            , Spin()
+            , Spout()
+            , bFinished(false)
             // More variables still missing WIP
         {
-            const char* csdFilePath = StringCast<ANSICHAR>(**m_FilePath.Get()).Get();
-            FString srOptionFString = "--sample-rate=" + FString::FromInt((int)m_OpSettings.GetSampleRate());
-            const char* srOption = StringCast<ANSICHAR>(*srOptionFString).Get();
+            const char* CsdFilePath = StringCast<ANSICHAR>(**FilePath.Get()).Get();
+            FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
+            const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
 
             // WIP make not explode it when compilation error
-            m_CsoundInstance.Compile(csdFilePath, srOption, "-n");
+            CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
 
-            m_Spin = m_CsoundInstance.GetSpin();
-            m_Spout = m_CsoundInstance.GetSpout();
+            Spin = CsoundInstance.GetSpin();
+            Spout = CsoundInstance.GetSpout();
             
             // WIP Make schedule "f0 z" so it runs indefinetely independently of the score, it's not working right now
             // Csound Unity does not have this option either, the user has to add it manually to the csd file
             // --daemon to do that
-            m_CsoundInstance.InputMessage("f0 z");
+            CsoundInstance.InputMessage("f0 z");
 
             // WIP Create a stop event?
             // WIP when Csound stops, an annoying sound gets outputed, stop that
@@ -108,42 +105,39 @@ namespace MetaCsound
                     , m_OpSettings.GetSampleRate()
                     , m_CsoundInstance.GetSr()));*/
 
-            m_InBuffers.Empty(m_InAudioRefs.Num());
-            for (size_t i = 0; i < m_InAudioRefs.Num(); i++)
+            BuffersIn.Empty(InAudioRefs.Num());
+            for (size_t i = 0; i < InAudioRefs.Num(); i++)
             {
-                m_InBuffers.Add(m_InAudioRefs[i]->GetData());
+                BuffersIn.Add(InAudioRefs[i]->GetData());
             }
 
-            m_OutAudioRefs.Empty(NumOutAudioChannels);
-            m_OutBuffers.Empty(NumOutAudioChannels);
-            for (size_t i = 0; i < NumOutAudioChannels; i++)
+            AudioOutRefs.Empty(InNumOutAudioChannels);
+            BuffersOut.Empty(InNumOutAudioChannels);
+            for (size_t i = 0; i < InNumOutAudioChannels; i++)
             {
-                m_OutAudioRefs.Add(FAudioBufferWriteRef::CreateNew(m_OpSettings));
-                m_OutBuffers.Add(m_OutAudioRefs[i]->GetData());
+                AudioOutRefs.Add(FAudioBufferWriteRef::CreateNew(OpSettings));
+                BuffersOut.Add(AudioOutRefs[i]->GetData());
             }
 
-            m_InControlNames.Empty(m_InControlRefs.Num());
-            //m_InControlNames2.Empty(m_InControlRefs.Num());
-            for (size_t i = 0; i < m_InControlRefs.Num(); i++)
+            ControlInNames.Empty(ControlInRefs.Num());
+            for (size_t i = 0; i < ControlInRefs.Num(); i++)
             {
-                m_InControlNames.Add("InK_" + FString::FromInt(i)); // WIP Change name
-                //m_InControlNames2[i] = new char[20];
-                //strcpy(m_InControlNames2[i] , StringCast<ANSICHAR>(*m_InControlNames[i]).Get());
+                ControlInNames.Add("InK_" + FString::FromInt(i)); // WIP Change name
             }
 
-            m_OutControlRefs.Empty(NumOutControlChannels);
-            m_OutControlNames.Empty(NumOutControlChannels);
-            for (size_t i = 0; i < NumOutControlChannels; i++)
+            ControlOutRefs.Empty(InNumOutControlChannels);
+            ControlOutNames.Empty(InNumOutControlChannels);
+            for (size_t i = 0; i < InNumOutControlChannels; i++)
             {
-                m_OutControlRefs.Add(FFloatWriteRef::CreateNew());
-                m_OutControlNames.Add("OutK_" + FString::FromInt(i));
+                ControlOutRefs.Add(FFloatWriteRef::CreateNew());
+                ControlOutNames.Add("OutK_" + FString::FromInt(i));
             }
 
-            m_CsoundNchnlsIn = m_CsoundInstance.GetNchnlsInput();
-            m_CsoundNchnlsOut = m_CsoundInstance.GetNchnls();
-            m_MinAudioIn = m_InBuffers.Num() <= m_CsoundNchnlsIn ? m_InBuffers.Num() : m_CsoundNchnlsIn;
-            m_MinAudioOut = m_OutBuffers.Num() <= m_CsoundNchnlsOut ? m_OutBuffers.Num() : m_CsoundNchnlsOut;
-            m_CsoundKsmps = (uint32)m_CsoundInstance.GetKsmps();
+            CsoundNchnlsIn = CsoundInstance.GetNchnlsInput();
+            CsoundNchnlsOut = CsoundInstance.GetNchnls();
+            MinAudioIn = BuffersIn.Num() <= CsoundNchnlsIn ? BuffersIn.Num() : CsoundNchnlsIn;
+            MinAudioOut = BuffersOut.Num() <= CsoundNchnlsOut ? BuffersOut.Num() : CsoundNchnlsOut;
+            CsoundKsmps = (uint32)CsoundInstance.GetKsmps();
 
             // No way to subscribe in advance?
             //const FTrigger *trig = m_EventTrigger.Get();
@@ -154,72 +148,74 @@ namespace MetaCsound
         // Primary node functionality
         void Execute()
         {
-            if (m_Finished)
+            if (bFinished)
             {
-                m_FinishedTrigger->AdvanceBlock();
+                FinishedTrigger->AdvanceBlock();
                 return;
             }
                 
 
-            if (m_EventTrigger->IsTriggeredInBlock())
+            if (EventTrigger->IsTriggeredInBlock())
             {
                 // WIP Does Csound work in sample accurate score line events? Use a string queue, handled by another node
                 // Or the best way would be to use callbacks, does m_EventTrigger allow for callbacks??
                 // Not sample accurate
-                const char* eventCString = StringCast<ANSICHAR>(**m_EventString.Get()).Get();
-                m_CsoundInstance.InputMessage(eventCString);
+                const char* EventCString = StringCast<ANSICHAR>(**EventString.Get()).Get();
+                CsoundInstance.InputMessage(EventCString);
             }
 
-            for (size_t f = 0; f < m_OpSettings.GetNumFramesPerBlock(); f++)
+            for (size_t f = 0; f < OpSettings.GetNumFramesPerBlock(); f++)
             {
-                for (size_t i = 0; i < m_MinAudioIn; i++)
+                for (size_t i = 0; i < MinAudioIn; i++)
                 {
                     // WIP Use version of Csound that uses floats instead of doubles?
-                    m_Spin[m_SpIndex * m_CsoundNchnlsIn + i] = (double)(m_InBuffers[i][f]);
+                    Spin[SpIndex * CsoundNchnlsIn + i] = (double)(BuffersIn[i][f]);
                 }
                 
-                for (size_t i = 0; i < m_MinAudioOut; i++)
+                for (size_t i = 0; i < MinAudioOut; i++)
                 {
-                    m_OutBuffers[i][f] = (float)m_Spout[m_SpIndex * m_CsoundNchnlsOut + i];
+                    BuffersOut[i][f] = (float)Spout[SpIndex * CsoundNchnlsOut + i];
                 }
 
-                if (++m_SpIndex >= m_CsoundKsmps)
+                if (++SpIndex >= CsoundKsmps)
                 {
-                    for (size_t i = 0; i < m_InControlNames.Num(); i++)
+                    for (size_t i = 0; i < ControlInNames.Num(); i++)
                     {
                         // Use FString::Format instead of keeping the strings in an array?
-                        m_CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*m_InControlNames[i]).Get(), (double)*(m_InControlRefs[i]));
+                        CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*ControlInNames[i]).Get(), (double)*(ControlInRefs[i]));
                     }
 
-                    m_Finished = (bool)m_CsoundInstance.PerformKsmps();
-                    m_SpIndex = 0;
+                    bFinished = (bool)CsoundInstance.PerformKsmps();
+                    SpIndex = 0;
 
-                    if (m_Finished)
+                    if (bFinished)
                     {
-                        m_FinishedTrigger->TriggerFrame(f);
+                        FinishedTrigger->TriggerFrame(f);
                         ClearChannels();
                         return;
                     }
                     
-                    for (size_t i = 0; i < m_OutControlRefs.Num(); i++)
+                    for (size_t i = 0; i < ControlOutRefs.Num(); i++)
                     {
-                        *(m_OutControlRefs[i]) = (float)m_CsoundInstance.GetControlChannel(StringCast<ANSICHAR>(*m_OutControlNames[i]).Get());
+                        *(ControlOutRefs[i]) = (float)CsoundInstance.GetControlChannel(StringCast<ANSICHAR>(*ControlOutNames[i]).Get());
                     }
 
                     // csound.destroy and csound.compile to recompile to make it like a loop
                 }
             }
-
-            //m_FinishedTrigger->AdvanceBlock();
         }
 
         void ClearChannels()
         {
-            for (size_t i = 0; i < m_OutAudioRefs.Num(); i++)
-                m_OutAudioRefs[i]->Zero();
-
-            for (size_t i = 0; i < m_OutControlRefs.Num(); i++)
-                *m_OutControlRefs[i] = 0.;
+            for (size_t i = 0; i < AudioOutRefs.Num(); i++)
+            {
+                AudioOutRefs[i]->Zero();
+            }
+                
+            for (size_t i = 0; i < ControlOutRefs.Num(); i++)
+            {
+                *ControlOutRefs[i] = 0.;
+            }
         }
 
         static const FNodeClassMetadata& GetNodeInfo()
@@ -241,63 +237,85 @@ namespace MetaCsound
                     return Info;
                 };
 
+            // WIP put this as a static member of the class?
             static const FNodeClassMetadata Metadata = CreateNodeClassMetadata();
             return Metadata;
         }
 
         static const FVertexInterface& DeclareVertexInterface()
         {
-            FInputVertexInterface inVer;
-            inVer.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(CsoundFilePath)));
+            FInputVertexInterface InputVertex;
+            InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(FilePath)));
 
-            for (uint32 i = 0; i < _numAudioChannelsIn; i++)
-                inVer.Add(TInputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InA, i)));
-            for (uint32 i = 0; i < _numControlChannelsIn; i++)
-                inVer.Add(TInputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InK, i)));
+            for (uint32 i = 0; i < NumAudioChannelsIn; i++)
+            {
+                InputVertex.Add(TInputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InA, i)));
+            }
+                
+            for (uint32 i = 0; i < NumControlChannelsIn; i++)
+            {
+                InputVertex.Add(TInputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InK, i)));
+            }
+                
 
-            inVer.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(EventString)));
-            inVer.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(EventTrigger)));
+            InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(EvStr)));
+            InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(EvTrig)));
             
-            FOutputVertexInterface outVer;
-            outVer.Add(TOutputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(FinishedTrigger)));
-            for (uint32 i = 0; i < _numAudioChannelsOut; i++)
-                outVer.Add(TOutputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutA, i)));
-            for (uint32 i = 0; i < _numControlChannelsOut; i++)
-                outVer.Add(TOutputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutK, i)));
+            FOutputVertexInterface OutputVertex;
+            OutputVertex.Add(TOutputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(FinTrig)));
+            for (uint32 i = 0; i < NumAudioChannelsOut; i++)
+            {
+                OutputVertex.Add(TOutputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutA, i)));
+            }
+                
+            for (uint32 i = 0; i < NumControlChannelsOut; i++)     
+            {
+                OutputVertex.Add(TOutputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutK, i)));
+            }
 
-            static const FVertexInterface Interface(inVer, outVer);
-            return Interface;
+            static const FVertexInterface VertexInterface(InputVertex, OutputVertex);
+            return VertexInterface;
         }
 
         // Allows MetaSound graph to interact with your node's inputs
-        virtual FDataReferenceCollection GetInputs() const override
+        virtual FDataReferenceCollection GetInputs() const override final
         {
             FDataReferenceCollection InputDataReferences;
 
-            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(CsoundFilePath), m_FilePath);
+            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(FilePath), FilePath);
 
-            for (uint32 i = 0; i < _numAudioChannelsIn; i++)
-                InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(InA, i), m_InAudioRefs[i]);
-            for (uint32 i = 0; i < _numControlChannelsIn; i++)
-                InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(InK, i), m_InControlRefs[i]);
+            for (size_t i = 0; i < AudioInRefs.Num(); i++)
+            {
+                InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(InA, i), AudioInRefs[i]);
+            }
+                
+            for (size_t i = 0; i < ControlInRefs.Num(); i++)
+            {
+                InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(InK, i), ControlInRefs[i]);
+            }
 
-            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EventString), m_EventString);
-            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EventTrigger), m_EventTrigger);
+            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvStr), EventString);
+            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvTrig), EventTrigger);
 
             return InputDataReferences;
         }
 
         // Allows MetaSound graph to interact with your node's outputs
-        virtual FDataReferenceCollection GetOutputs() const override
+        virtual FDataReferenceCollection GetOutputs() const override final
         {
             FDataReferenceCollection OutputDataReferences;
 
-            OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(FinishedTrigger), m_FinishedTrigger);
+            OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(FinTrig), FinishedTrigger);
 
-            for (uint32 i = 0; i < _numAudioChannelsOut; i++)
-                OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutA, i), m_OutAudioRefs[i]);
-            for (uint32 i = 0; i < _numControlChannelsOut; i++)
-                OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutK, i), m_OutControlRefs[i]);
+            for (size_t i = 0; i < AudioOutRefs.Num(); i++)
+            {
+                OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutA, i), AudioOutRefs[i]);
+            }
+                
+            for (size_t i = 0; i < ControlOutRefs.Num(); i++)
+            {
+                OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutK, i), ControlOutRefs[i]);
+            }
 
             return OutputDataReferences;
         }
@@ -308,17 +326,17 @@ namespace MetaCsound
             const FInputVertexInterface& InputInterface = DeclareVertexInterface().GetInputInterface();
 
             TDataReadReference<FString> CsoundFP = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
-                (InputInterface, METASOUND_GET_PARAM_NAME(CsoundFilePath), InParams.OperatorSettings);
+                (InputInterface, METASOUND_GET_PARAM_NAME(FilePath), InParams.OperatorSettings);
             TDataReadReference<FString> EvString = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
-                (InputInterface, METASOUND_GET_PARAM_NAME(EventString), InParams.OperatorSettings);
+                (InputInterface, METASOUND_GET_PARAM_NAME(EvStr), InParams.OperatorSettings);
             TDataReadReference<FTrigger> EvTrigger = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FTrigger>
-                (InputInterface, METASOUND_GET_PARAM_NAME(EventTrigger), InParams.OperatorSettings);
+                (InputInterface, METASOUND_GET_PARAM_NAME(EvTrig), InParams.OperatorSettings);
 
-            TArray<TDataReadReference<FAudioBuffer>> arrayAudio;
-            arrayAudio.Empty(_numAudioChannelsIn);
-            for (uint32 i = 0; i < _numAudioChannelsIn; i++)
+            TArray<TDataReadReference<FAudioBuffer>> AudioInArray;
+            AudioInArray.Empty(NumAudioChannelsIn);
+            for (uint32 i = 0; i < NumAudioChannelsIn; i++)
             { 
-                arrayAudio.Add(TDataReadReference<FAudioBuffer>
+                AudioInArray.Add(TDataReadReference<FAudioBuffer>
                 (
                     InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FAudioBuffer>
                     (
@@ -329,11 +347,11 @@ namespace MetaCsound
                 ));
             }
 
-            TArray<TDataReadReference<float>> arrayControl;
-            arrayControl.Empty(_numControlChannelsIn);
-            for (uint32 i = 0; i < _numControlChannelsIn; i++)
+            TArray<TDataReadReference<float>> ControlInArray;
+            ControlInArray.Empty(NumControlChannelsIn);
+            for (uint32 i = 0; i < NumControlChannelsIn; i++)
             {
-                arrayControl.Add(TDataReadReference<float>
+                ControlInArray.Add(TDataReadReference<float>
                 (
                     InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<float>
                     (
@@ -347,44 +365,44 @@ namespace MetaCsound
             return MakeUnique<FCsoundOperator>(
                 InParams.OperatorSettings,
                 CsoundFP,
-                arrayAudio,
-                _numAudioChannelsOut,
-                arrayControl,
-                _numControlChannelsOut,
+                AudioInArray,
+                NumAudioChannelsOut,
+                ControlInArray,
+                NumControlChannelsOut,
                 EvString,
                 EvTrigger
             );
         }
 
     private:
-        FStringReadRef m_FilePath;
-        FStringReadRef m_EventString;
-        FTriggerReadRef m_EventTrigger;
-        FTriggerWriteRef m_FinishedTrigger;
+        FStringReadRef FilePath;
+        FStringReadRef EventString;
+        FTriggerReadRef EventTrigger;
+        FTriggerWriteRef FinishedTrigger;
 
-        TArray<FAudioBufferReadRef> m_InAudioRefs;
-        TArray<const float*> m_InBuffers;
-        TArray<FAudioBufferWriteRef> m_OutAudioRefs;
-        TArray<float*> m_OutBuffers;
+        TArray<FAudioBufferReadRef> AudioInRefs;
+        TArray<const float*> BuffersIn;
+        TArray<FAudioBufferWriteRef> AudioOutRefs;
+        TArray<float*> BuffersOut;
 
-        TArray<FFloatReadRef> m_InControlRefs;
-        TArray<FString> m_InControlNames;
-        TArray<FFloatWriteRef> m_OutControlRefs;
-        TArray<FString> m_OutControlNames;
+        TArray<FFloatReadRef> ControlInRefs;
+        TArray<FString> ControlInNames;
+        TArray<FFloatWriteRef> ControlOutRefs;
+        TArray<FString> ControlOutNames;
 
-        FOperatorSettings m_OpSettings;
-        Csound m_CsoundInstance;
-        uint32 m_SpIndex;
-        bool m_Finished;
+        FOperatorSettings OpSettings;
+        Csound CsoundInstance;
+        uint32 SpIndex;
+        bool bFinished;
 
-        double *m_Spin, *m_Spout;
-        size_t m_CsoundNchnlsIn, m_CsoundNchnlsOut, m_MinAudioIn, m_MinAudioOut;
-        uint32 m_CsoundKsmps;
+        double* Spin, * Spout;
+        size_t CsoundNchnlsIn, CsoundNchnlsOut, MinAudioIn, MinAudioOut;
+        uint32 CsoundKsmps;
 
-        static const uint32 _numAudioChannelsIn = 2; // WIP Change name and formatting?
-        static const uint32 _numAudioChannelsOut = 2;
-        static const uint32 _numControlChannelsIn = 2;
-        static const uint32 _numControlChannelsOut = 1;
+        static const uint32 NumAudioChannelsIn = 2;
+        static const uint32 NumAudioChannelsOut = 2;
+        static const uint32 NumControlChannelsIn = 2;
+        static const uint32 NumControlChannelsOut = 1;
     };
 
     class FCsoundNode : public FNodeFacade
