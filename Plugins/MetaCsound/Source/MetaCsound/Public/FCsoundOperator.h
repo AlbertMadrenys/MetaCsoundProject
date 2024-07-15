@@ -145,16 +145,6 @@ namespace MetaCsound
 
             for (int32 f = 0; f < OpSettings.GetNumFramesPerBlock(); f++)
             {
-
-                for (int32 i = 0; i < StopTrigger->Num() && OpState != EOpState::Stopped; i++)
-                {
-                    if ((*StopTrigger)[i] == f)
-                    {
-                        Stop(f);
-                        break;
-                    }
-                }
-
                 for (int32 i = 0; i < PlayTrigger->Num(); i++)
                 {
                     if ((*PlayTrigger)[i] == f)
@@ -164,6 +154,15 @@ namespace MetaCsound
                         {
                             return;
                         }
+                        break;
+                    }
+                }
+
+                for (int32 i = 0; i < StopTrigger->Num() && OpState != EOpState::Stopped; i++)
+                {
+                    if ((*StopTrigger)[i] == f)
+                    {
+                        Stop(f);
                         break;
                     }
                 }
