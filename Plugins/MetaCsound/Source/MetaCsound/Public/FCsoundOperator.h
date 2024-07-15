@@ -37,6 +37,8 @@ namespace MetaCsound
 {
     using namespace Metasound; // WIP Is this correct?
 
+    METASOUND_PARAM(PlayTrig, "Play", "Starts playing Csound");
+    METASOUND_PARAM(StopTrig, "Stop", "Stops the Csound performace");
     METASOUND_PARAM(FilePath, "File", "Path of the .csd file to be executed by Csound");
     METASOUND_PARAM(EvStr, "Event String", "The string that contains a Csound event");
     METASOUND_PARAM(EvTrig, "Event Trigger", "Triggers the Csound event descrived by EventString");
@@ -53,6 +55,8 @@ namespace MetaCsound
     protected:
         // Protected constructor
         TCsoundOperator(const FOperatorSettings& InSettings,
+            const FTriggerReadRef& InPlayTrigger,
+            const FTriggerReadRef& InStopTrigger,
             const FStringReadRef& InFilePath,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
@@ -61,7 +65,9 @@ namespace MetaCsound
             const FStringReadRef& InEventString,
             const FTriggerReadRef& InEventTrigger
             )
-            : FilePath(InFilePath)
+            : PlayTrigger(InPlayTrigger)
+            , StopTrigger(InStopTrigger)
+            , FilePath(InFilePath)
             , EventString(InEventString)
             , EventTrigger(InEventTrigger)
             , FinishedTrigger(FTriggerWriteRef::CreateNew(InSettings))
@@ -78,32 +84,9 @@ namespace MetaCsound
             , SpIndex(0)
             , Spin(nullptr)
             , Spout(nullptr)
-            , OpState(EOpState::Playing)
+            , OpState(EOpState::Stopped)
             // More variables still missing WIP
         {
-            const char* CsdFilePath = StringCast<ANSICHAR>(**FilePath.Get()).Get();
-            FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
-            const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
-
-            int32 ErrorCode = CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
-            if (ErrorCode != 0)
-            {
-                // WIP show the error to the developer?
-                OpState = EOpState::Error;
-                return;
-            }
-
-            Spin = CsoundInstance.GetSpin();
-            Spout = CsoundInstance.GetSpout();
-            
-            // WIP Make schedule "f0 z" so it runs indefinetely independently of the score, it's not working right now
-            // Csound Unity does not have this option either, the user has to add it manually to the csd file
-            // --daemon to do that
-            CsoundInstance.InputMessage("f0 z");
-
-            // WIP Create a stop event?
-            // WIP when Csound stops, an annoying sound gets outputed, stop that
-            
             /*
             GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green,
                 FString::Printf(TEXT("sr: %f,csound sr: %f")
@@ -138,12 +121,6 @@ namespace MetaCsound
                 ControlOutNames.Add("OutK_" + FString::FromInt(i));
             }
 
-            CsoundNchnlsIn = CsoundInstance.GetNchnlsInput();
-            CsoundNchnlsOut = CsoundInstance.GetNchnls();
-            MinAudioIn = BuffersIn.Num() <= CsoundNchnlsIn ? BuffersIn.Num() : CsoundNchnlsIn;
-            MinAudioOut = BuffersOut.Num() <= CsoundNchnlsOut ? BuffersOut.Num() : CsoundNchnlsOut;
-            CsoundKsmps = (uint32)CsoundInstance.GetKsmps();
-
             // No way to subscribe in advance?
             //const FTrigger *trig = m_EventTrigger.Get();
             //trig->
@@ -155,23 +132,58 @@ namespace MetaCsound
         // Primary node functionality
         void Execute()
         {
-            if (OpState == EOpState::Stopped || OpState == EOpState::Error)
+            if (OpState == EOpState::Error)
             {
-                FinishedTrigger->AdvanceBlock();
                 return;
             }
-
-            if (EventTrigger->IsTriggeredInBlock())
+            else if (OpState == EOpState::Stopped)
             {
-                // WIP Does Csound work in sample accurate score line events? Use a string queue, handled by another node
-                // Or the best way would be to use callbacks, does m_EventTrigger allow for callbacks??
-                // Not sample accurate
-                const char* EventCString = StringCast<ANSICHAR>(**EventString.Get()).Get();
-                CsoundInstance.InputMessage(EventCString);
+                ClearChannels(0);
             }
+
+            FinishedTrigger->AdvanceBlock();
 
             for (int32 f = 0; f < OpSettings.GetNumFramesPerBlock(); f++)
             {
+
+                for (int32 i = 0; i < StopTrigger->Num() && OpState != EOpState::Stopped; i++)
+                {
+                    if ((*StopTrigger)[i] == f)
+                    {
+                        Stop(f);
+                        break;
+                    }
+                }
+
+                for (int32 i = 0; i < PlayTrigger->Num(); i++)
+                {
+                    if ((*PlayTrigger)[i] == f)
+                    {
+                        Play(f);
+                        if (OpState == EOpState::Error)
+                        {
+                            return;
+                        }
+                        break;
+                    }
+                }
+                
+                if (OpState != EOpState::Playing)
+                {
+                    continue;
+                }
+
+                // WIP all of this code into their own method?
+                for (int32 i = 0; i < EventTrigger->Num(); i++)
+                {
+                    if ((*EventTrigger)[i] == f)
+                    {
+                        // WIP The string might not be the correct one if EventTrigger->Num() > 1
+                        const char* EventCString = StringCast<ANSICHAR>(**EventString.Get()).Get();
+                        CsoundInstance.InputMessage(EventCString);
+                    }
+                }
+
                 for (int32 i = 0; i < MinAudioIn; i++)
                 {
                     // WIP Use version of Csound that uses floats instead of doubles?
@@ -191,31 +203,75 @@ namespace MetaCsound
                         CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*ControlInNames[i]).Get(), (double)*(ControlInRefs[i]));
                     }
 
-                    SpIndex = 0;
-                    int32 FinishedCode = CsoundInstance.PerformKsmps();
-                    if (FinishedCode != 0)
-                    {
-                        OpState = EOpState::Stopped;
-                        FinishedTrigger->TriggerFrame(f);
-                        ClearChannels();
-                        return;
-                    }
+                    CsoundPerformKsmps(f);
                     
-                    for (int32 i = 0; i < ControlOutRefs.Num(); i++)
+                    for (int32 i = 0; i < ControlOutRefs.Num() && OpState == EOpState::Playing; i++)
                     {
                         *(ControlOutRefs[i]) = (float)CsoundInstance.GetControlChannel(StringCast<ANSICHAR>(*ControlOutNames[i]).Get());
                     }
-
-                    // WIP csound.destroy and csound.compile or reset to recompile to make it like a loop?
                 }
             }
         }
 
-        void ClearChannels()
+    private:
+
+        void Play(int32 CurrentFrame)
         {
+            CsoundInstance.Reset();
+
+            const char* CsdFilePath = StringCast<ANSICHAR>(**FilePath.Get()).Get();
+            FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
+            const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
+
+            // WIP Try to only compile one time, not on every Play call
+            int32 ErrorCode = CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
+            if (ErrorCode != 0)
+            {
+                // WIP show the error to the developer?
+                OpState = EOpState::Error;
+                return;
+            }
+            else
+            {
+                OpState = EOpState::Playing;
+            }
+
+            Spin = CsoundInstance.GetSpin();
+            Spout = CsoundInstance.GetSpout();
+
+            CsoundNchnlsIn = CsoundInstance.GetNchnlsInput();
+            CsoundNchnlsOut = CsoundInstance.GetNchnls();
+            MinAudioIn = BuffersIn.Num() <= CsoundNchnlsIn ? BuffersIn.Num() : CsoundNchnlsIn;
+            MinAudioOut = BuffersOut.Num() <= CsoundNchnlsOut ? BuffersOut.Num() : CsoundNchnlsOut;
+            CsoundKsmps = (uint32)CsoundInstance.GetKsmps();
+
+            CsoundPerformKsmps(CurrentFrame);
+        }
+
+        void Stop(int32 StopFrame = 0)
+        {
+            OpState = EOpState::Stopped;
+
+            ClearChannels(StopFrame);
+            FinishedTrigger->TriggerFrame(StopFrame);
+        }
+
+        void ClearChannels(int32 StopFrame = 0)
+        {
+            // WIP add bool to know the previous StopFrame value? 
             for (int32 i = 0; i < AudioOutRefs.Num(); i++)
             {
-                AudioOutRefs[i]->Zero();
+                if (StopFrame == 0)
+                {
+                    AudioOutRefs[i]->Zero();
+                }
+                else
+                {
+                    for (int32 f = StopFrame; f < OpSettings.GetNumFramesPerBlock(); f++)
+                    {
+                        BuffersOut[i][f] = 0.; // WIP do this with iterators or an available method?
+                    }
+                }
             }
                 
             for (int32 i = 0; i < ControlOutRefs.Num(); i++)
@@ -223,6 +279,18 @@ namespace MetaCsound
                 *ControlOutRefs[i] = 0.;
             }
         }
+
+        void CsoundPerformKsmps(int32 CurrentFrame)
+        {
+            SpIndex = 0;
+            int32 FinishedCode = CsoundInstance.PerformKsmps();
+            if (FinishedCode != 0)
+            {
+                Stop(CurrentFrame);
+            }
+        }
+
+    public:
 
         static const FNodeClassMetadata& GetNodeInfo()
         {
@@ -250,8 +318,9 @@ namespace MetaCsound
         static const FVertexInterface& DeclareVertexInterface()
         {
             FInputVertexInterface InputVertex;
+            InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(PlayTrig)));
+            InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(StopTrig)));
             InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(FilePath)));
-
             for (int32 i = 0; i < DerivedOperator::NumAudioChannelsIn; i++)
             {
                 InputVertex.Add(TInputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InA, i)));
@@ -260,8 +329,7 @@ namespace MetaCsound
             for (int32 i = 0; i < DerivedOperator::NumControlChannelsIn; i++)
             {
                 InputVertex.Add(TInputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InK, i)));
-            }
-                
+            } 
 
             InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(EvStr)));
             InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(EvTrig)));
@@ -287,6 +355,8 @@ namespace MetaCsound
         {
             FDataReferenceCollection InputDataReferences;
 
+            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(PlayTrig), PlayTrigger);
+            InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(StopTrig), StopTrigger);
             InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(FilePath), FilePath);
 
             for (int32 i = 0; i < AudioInRefs.Num(); i++)
@@ -330,6 +400,10 @@ namespace MetaCsound
             const FDataReferenceCollection& InputCollection = InParams.InputDataReferences;
             const FInputVertexInterface& InputInterface = DeclareVertexInterface().GetInputInterface();
 
+            TDataReadReference<FTrigger> PlayTrigger = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FTrigger>
+                (InputInterface, METASOUND_GET_PARAM_NAME(PlayTrig), InParams.OperatorSettings);
+            TDataReadReference<FTrigger> StopTrigger = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FTrigger>
+                (InputInterface, METASOUND_GET_PARAM_NAME(StopTrig), InParams.OperatorSettings);
             TDataReadReference<FString> CsoundFP = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
                 (InputInterface, METASOUND_GET_PARAM_NAME(FilePath), InParams.OperatorSettings);
             TDataReadReference<FString> EvString = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
@@ -369,6 +443,8 @@ namespace MetaCsound
 
             return MakeUnique<DerivedOperator>(
                 InParams.OperatorSettings,
+                PlayTrigger,
+                StopTrigger,
                 CsoundFP,
                 AudioInArray,
                 DerivedOperator::NumAudioChannelsOut,
@@ -380,6 +456,8 @@ namespace MetaCsound
         }
 
     private:
+        FTriggerReadRef PlayTrigger;
+        FTriggerReadRef StopTrigger;
         FStringReadRef FilePath;
         FStringReadRef EventString;
         FTriggerReadRef EventTrigger;
@@ -417,6 +495,8 @@ namespace MetaCsound
     {
     public:
         FCsoundOperator2(const FOperatorSettings& InSettings,
+            const FTriggerReadRef& InPlayTrigger,
+            const FTriggerReadRef& InStopTrigger,
             const FStringReadRef& InFilePath,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
@@ -426,7 +506,8 @@ namespace MetaCsound
             const FTriggerReadRef& InEventTrigger
         )
         : TCsoundOperator(
-            InSettings, InFilePath, InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
+            InSettings, InPlayTrigger, InStopTrigger, InFilePath,
+            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
             InEventString, InEventTrigger
         )
         { }
@@ -470,6 +551,8 @@ namespace MetaCsound
     public:
         
         FCsoundOperator4(const FOperatorSettings& InSettings,
+            const FTriggerReadRef& InPlayTrigger,
+            const FTriggerReadRef& InStopTrigger,
             const FStringReadRef& InFilePath,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
@@ -479,7 +562,8 @@ namespace MetaCsound
             const FTriggerReadRef& InEventTrigger
         )
         : TCsoundOperator(
-            InSettings, InFilePath, InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
+            InSettings, InPlayTrigger, InStopTrigger, InFilePath,
+            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
             InEventString, InEventTrigger
         )
         { }

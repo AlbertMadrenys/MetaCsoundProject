@@ -38,12 +38,12 @@ aout vco2 0.05, 220
 outs aout, aout
 endin
 
-//schedule(1, 0, -1);
+schedule(1, 0, -1);
 //schedule(2, 0, 3)
 
 </CsInstruments>
 <CsScore>
-i2 0 3
+//i2 0 3
 //f0 z
 </CsScore>
 
