@@ -222,11 +222,12 @@ namespace MetaCsound
             FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
             const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
 
-            // WIP Try to only compile one time, not on every Play call
+            // WIP Try to only compile one time, not on every Play call - use rewind score???
             int32 ErrorCode = CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
             if (ErrorCode != 0)
             {
-                // WIP show the error to the developer?
+                // WIP Use CsoundInstance.CreateMessageBuffer() to get the error?
+                UE_LOG(LogMetaSound, Error, TEXT("Not able to compile Csound file: %s"), **FilePath.Get());
                 OpState = EOpState::Error;
                 return;
             }
