@@ -8,6 +8,26 @@ public class MyProject2 : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
-    }
+		PublicDependencyModuleNames.AddRange
+		(
+			new string[] {
+				"Core",
+				"CoreUObject",
+				"Engine",
+				"InputCore",
+				"EnhancedInput",
+
+				"Projects",
+				"SignalProcessing",
+				"AudioExtensions",
+
+				"MetasoundEngine",
+				"MetasoundGraphCore",
+				"MetasoundFrontend",
+				"MetasoundEditor",
+
+				"MetaCsound",
+			}
+		);
+	}
 }

@@ -18,12 +18,14 @@
 		{
 			"Name": "MetaCsound",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostDefault"
 		}
 	],
 	"Plugins": [
 		{
 			"Name": "Metasound",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
 			"Enabled": true
 		}
 	]

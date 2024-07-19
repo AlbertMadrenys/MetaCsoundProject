@@ -3,6 +3,7 @@
 #include "MetaCsound.h"
 #include "MetasoundFrontendRegistries.h"
 #include "Interfaces/IPluginManager.h"
+#include "MetasoundEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "FMetaCsoundModule"
 
@@ -23,6 +24,9 @@ void FMetaCsoundModule::StartupModule()
 	{
 		UE_LOG(LogTemp, Fatal, TEXT("csound64.dll failed to load!"));
 	}
+
+	//Metasound::Editor::IMetasoundEditorModule& MetaSoundEditorModule = FModuleManager::LoadModuleChecked<Metasound::Editor::IMetasoundEditorModule>("MetaSoundEditor");
+	//MetaSoundEditorModule.RegisterPinType("TCHAR");
 	
 }
 
@@ -32,6 +36,8 @@ void FMetaCsoundModule::ShutdownModule()
 	// we call this function before unloading the module.
 }
 
+// This caused a Link2001 error! Maybe if I solve this I'll be able to solve the other problems?
+/*
 namespace Metasound
 {
 	namespace StandardNodes
@@ -39,9 +45,8 @@ namespace Metasound
 		const FName Namespace = "UE";
 		const FName AudioVariant = "Audio";
 	}
-}
+}*/
 
 #undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(FMetaCsoundModule, MetaCsound)
-
