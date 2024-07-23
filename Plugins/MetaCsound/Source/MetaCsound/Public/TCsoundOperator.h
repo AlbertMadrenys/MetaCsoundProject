@@ -51,7 +51,7 @@ namespace Metasound
     DECLARE_METASOUND_DATA_REFERENCE_TYPES(TCHAR, METACSOUND_API, FCharTypeInfo, FCharReadRef, FCharWriteRef);
 
     template<typename DerivedOperator>
-    class TCsoundOperator : public TExecutableOperator<DerivedOperator>
+    class METACSOUND_API TCsoundOperator : public TExecutableOperator<DerivedOperator>
     {
 
     protected:
@@ -126,7 +126,7 @@ namespace Metasound
         void CsoundPerformKsmps(int32 CurrentFrame);
     };
 
-    class FCsoundOperator2 : public TCsoundOperator<FCsoundOperator2>
+    class METACSOUND_API FCsoundOperator2 : public TCsoundOperator<FCsoundOperator2>
     {
     public:
         // WIP create struct that has all of the arguments, to avoid such long constructors?
@@ -171,7 +171,7 @@ namespace Metasound
         static constexpr int32 NumControlChannelsOut = 2;
     };
 
-    class FCsoundNode2 : public FNodeFacade
+    class METACSOUND_API FCsoundNode2 : public FNodeFacade
     {
     public:
         FCsoundNode2(const FNodeInitData& InitData) : FNodeFacade(InitData.InstanceName, InitData.InstanceID,
@@ -182,7 +182,7 @@ namespace Metasound
     // Register node
     METASOUND_REGISTER_NODE(FCsoundNode2); // WIP Node registration using module startup/shutdown?
 
-    class FCsoundOperator4 : public TCsoundOperator<FCsoundOperator4>
+    class METACSOUND_API FCsoundOperator4 : public TCsoundOperator<FCsoundOperator4>
     {
     public:
         
@@ -227,7 +227,7 @@ namespace Metasound
         static constexpr int32 NumControlChannelsOut = 4;
     };
 
-    class FCsoundNode4 : public FNodeFacade
+    class METACSOUND_API FCsoundNode4 : public FNodeFacade
     {
     public:
         FCsoundNode4(const FNodeInitData& InitData) : FNodeFacade(InitData.InstanceName, InitData.InstanceID,
