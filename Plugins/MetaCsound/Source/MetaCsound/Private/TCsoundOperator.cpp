@@ -45,7 +45,7 @@ Metasound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     const int32& InNumOutControlChannels,
     const FStringReadRef& InEventString,
     const FTriggerReadRef& InEventTrigger,
-    const FCharReadRef& InCharReadRef)
+    const TDataReadReference<TCHAR>& InCharReadRef)
     : PlayTrigger(InPlayTrigger)
     , StopTrigger(InStopTrigger)
     , FilePath(InFilePath)
