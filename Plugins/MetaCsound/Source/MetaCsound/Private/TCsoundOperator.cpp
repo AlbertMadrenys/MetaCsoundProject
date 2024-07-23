@@ -44,7 +44,8 @@ Metasound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     const TArray<FFloatReadRef>& InControlRefs,
     const int32& InNumOutControlChannels,
     const FStringReadRef& InEventString,
-    const FTriggerReadRef& InEventTrigger)
+    const FTriggerReadRef& InEventTrigger,
+    const FCharReadRef& InCharReadRef)
     : PlayTrigger(InPlayTrigger)
     , StopTrigger(InStopTrigger)
     , FilePath(InFilePath)
@@ -65,12 +66,14 @@ Metasound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     , Spin(nullptr)
     , Spout(nullptr)
     , OpState(EOpState::Stopped)
+    , CharReadRef(InCharReadRef)
 {
     // WIP Trying to make my own pin type
-    //TDataReferenceTypeInfo<TCHAR>::TypeId;
-    //Metasound::FCharTypeInfo::TypeId;
+    TDataReferenceTypeInfo<TCHAR>::TypeId;
+    FCharTypeInfo::TypeId;
     //Metasound::FBoolTypeInfo::TypeName;
     //Metasound::FCharReadRef readRef = Metasound::FCharReadRef(Metasound::FCharReadRef::CreateNew());
+    //Metasound::FCharReadRef readRef = Metasound::FCharReadRef::CreateNew();
 
     /*
     GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green,
@@ -327,6 +330,8 @@ const Metasound::FVertexInterface& Metasound::TCsoundOperator<DerivedOperator>::
         OutputVertex.Add(TOutputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutK, i)));
     }
 
+    InputVertex.Add(TInputDataVertex<TCHAR>(METASOUND_GET_PARAM_NAME_AND_METADATA(CharRead)));
+
     static const FVertexInterface VertexInterface(InputVertex, OutputVertex);
     return VertexInterface;
 }
@@ -354,6 +359,8 @@ Metasound::FDataReferenceCollection Metasound::TCsoundOperator<DerivedOperator>:
 
     InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvStr), EventString);
     InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvTrig), EventTrigger);
+
+    InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(CharRead), CharReadRef);
 
     return InputDataReferences;
 }
@@ -429,13 +436,17 @@ TUniquePtr<Metasound::IOperator> Metasound::TCsoundOperator<DerivedOperator>::Cr
             ));
     }
 
+    TDataReadReference<TCHAR> CharReadRef = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<TCHAR>
+        (InputInterface, METASOUND_GET_PARAM_NAME(CharRead), InParams.OperatorSettings);
+
     return MakeUnique<DerivedOperator>(
         InParams.OperatorSettings,
         PlayTrigger, StopTrigger,
         CsoundFP,
         AudioInArray, DerivedOperator::NumAudioChannelsOut,
         ControlInArray, DerivedOperator::NumControlChannelsOut,
-        EvString, EvTrigger
+        EvString, EvTrigger,
+        CharReadRef
     );
 }
 

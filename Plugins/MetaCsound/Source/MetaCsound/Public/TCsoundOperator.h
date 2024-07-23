@@ -50,6 +50,8 @@ namespace Metasound
 
     DECLARE_METASOUND_DATA_REFERENCE_TYPES(TCHAR, METACSOUND_API, FCharTypeInfo, FCharReadRef, FCharWriteRef);
 
+    METASOUND_PARAM(CharRead, "CharRead", "CharRead");
+
     template<typename DerivedOperator>
     class METACSOUND_API TCsoundOperator : public TExecutableOperator<DerivedOperator>
     {
@@ -65,7 +67,8 @@ namespace Metasound
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels,
             const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger
+            const FTriggerReadRef& InEventTrigger,
+            const TDataReadReference<TCHAR>& InCharReadRef
         );
 
     public:
@@ -120,6 +123,9 @@ namespace Metasound
 
         EOpState OpState;
 
+        TDataReadReference<TCHAR> CharReadRef;
+        //FCharReadRef CharReadRef; // WIP both options don't work
+
         void Play(int32 CurrentFrame);
         void Stop(int32 StopFrame = 0);
         void ClearChannels(int32 StopFrame = 0);
@@ -139,12 +145,13 @@ namespace Metasound
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels,
             const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger
+            const FTriggerReadRef& InEventTrigger,
+            const TDataReadReference<TCHAR>& InCharReadRef
         )
         : TCsoundOperator(
             InSettings, InPlayTrigger, InStopTrigger, InFilePath,
             InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
-            InEventString, InEventTrigger
+            InEventString, InEventTrigger, InCharReadRef
         )
         { }
 
@@ -195,12 +202,13 @@ namespace Metasound
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels,
             const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger
+            const FTriggerReadRef& InEventTrigger,
+            const TDataReadReference<TCHAR>& InCharReadRef
         )
         : TCsoundOperator(
             InSettings, InPlayTrigger, InStopTrigger, InFilePath,
             InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
-            InEventString, InEventTrigger
+            InEventString, InEventTrigger, InCharReadRef
         )
         { }
 
