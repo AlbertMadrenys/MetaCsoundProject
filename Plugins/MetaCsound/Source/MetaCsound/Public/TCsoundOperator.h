@@ -76,12 +76,10 @@ namespace MetaCsound
         static const FNodeClassMetadata& GetNodeInfo();
         static const FVertexInterface& DeclareVertexInterface();
 
-        // WIP use of BindInputs and BindOutputs instead?
         // Allows MetaSound graph to interact with your node's inputs
-        virtual FDataReferenceCollection GetInputs() const override final;
+        virtual void BindInputs(Metasound::FInputVertexInterfaceData& InOutVertexData) override final;
         // Allows MetaSound graph to interact with your node's outputs
-        virtual FDataReferenceCollection GetOutputs() const override final;
-
+        virtual void BindOutputs(Metasound::FOutputVertexInterfaceData& InOutVertexData) override final;
         static TUniquePtr<IOperator> CreateOperator(const FCreateOperatorParams& InParams, TArray<TUniquePtr<IOperatorBuildError>>& OutErrors);
 
     private:

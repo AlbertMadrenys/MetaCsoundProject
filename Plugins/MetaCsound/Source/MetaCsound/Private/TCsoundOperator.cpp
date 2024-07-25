@@ -336,52 +336,47 @@ const Metasound::FVertexInterface& MetaCsound::TCsoundOperator<DerivedOperator>:
 }
 
 template<typename DerivedOperator>
-Metasound::FDataReferenceCollection MetaCsound::TCsoundOperator<DerivedOperator>::GetInputs() const
+void MetaCsound::TCsoundOperator<DerivedOperator>::BindInputs(FInputVertexInterfaceData& InOutVertexData)
 {
+    // Seems like BindInputs and BindOutputs should be declared const,
+    // but the base virtual method is not currently.
+
     using namespace NodeParams;
 
-    FDataReferenceCollection InputDataReferences;
-
-    InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(PlayTrig), PlayTrigger);
-    InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(StopTrig), StopTrigger);
-    InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(FilePath), FilePath);
+    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(PlayTrig), PlayTrigger);
+    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(StopTrig), StopTrigger);
+    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(FilePath), FilePath);
 
     for (int32 i = 0; i < AudioInRefs.Num(); i++)
     {
-        InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(InA, i), AudioInRefs[i]);
+        InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME_WITH_INDEX(InA, i), AudioInRefs[i]);
     }
 
     for (int32 i = 0; i < ControlInRefs.Num(); i++)
     {
-        InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(InK, i), ControlInRefs[i]);
+        InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME_WITH_INDEX(InK, i), ControlInRefs[i]);
     }
 
-    InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvStr), EventString);
-    InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvTrig), EventTrigger);
-
-    return InputDataReferences;
+    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(EvStr), EventString);
+    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(EvTrig), EventTrigger);
 }
 
 template<typename DerivedOperator>
-Metasound::FDataReferenceCollection MetaCsound::TCsoundOperator<DerivedOperator>::GetOutputs() const
+void MetaCsound::TCsoundOperator<DerivedOperator>::BindOutputs(FOutputVertexInterfaceData& InOutVertexData)
 {
     using namespace NodeParams;
 
-    FDataReferenceCollection OutputDataReferences;
-
-    OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(FinTrig), FinishedTrigger);
+    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(FinTrig), FinishedTrigger);
 
     for (int32 i = 0; i < AudioOutRefs.Num(); i++)
     {
-        OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutA, i), AudioOutRefs[i]);
+        InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutA, i), AudioOutRefs[i]);
     }
 
     for (int32 i = 0; i < ControlOutRefs.Num(); i++)
     {
-        OutputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutK, i), ControlOutRefs[i]);
+        InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME_WITH_INDEX(OutK, i), ControlOutRefs[i]);
     }
-
-    return OutputDataReferences;
 }
 
 template<typename DerivedOperator>
