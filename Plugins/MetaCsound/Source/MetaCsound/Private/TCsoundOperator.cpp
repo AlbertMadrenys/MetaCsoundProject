@@ -15,23 +15,30 @@ THIRD_PARTY_INCLUDES_START
 #include <csound.hpp>
 THIRD_PARTY_INCLUDES_END
 
-
-
 #include "MetasoundExecutableOperator.h"     // TExecutableOperator class
 #include "MetasoundPrimitives.h"             // ReadRef and WriteRef descriptions for bool, int32, float, and string
 #include "MetasoundParamHelper.h"            // METASOUND_PARAM and METASOUND_GET_PARAM family of macros
 #include "Containers/Array.h"
 
-// WIP trying to create my own pin type
-#include "MetasoundDataReference.h"
-#include "MetasoundDataTypeRegistrationMacro.h"
-#include "MetasoundDataReferenceMacro.h"
-#include "MetasoundVariable.h"
-
 #include "MetaCsound.h"
 
 // Required for ensuring the node is supported by all languages in engine. Must be unique per MetaSound.
 #define LOCTEXT_NAMESPACE "MetaCsound_CsoundNode"
+
+namespace MetaCsound::NodeParams
+{
+    METASOUND_PARAM(PlayTrig, "Play", "Starts playing Csound");
+    METASOUND_PARAM(StopTrig, "Stop", "Stops the Csound performace");
+    METASOUND_PARAM(FilePath, "File", "Path of the .csd file to be executed by Csound");
+    METASOUND_PARAM(EvStr, "Event String", "The string that contains a Csound event");
+    METASOUND_PARAM(EvTrig, "Event Trigger", "Triggers the Csound event descrived by EventString");
+    METASOUND_PARAM(FinTrig, "On Finished", "Triggers when the Csound score has finished");
+
+    METASOUND_PARAM(InA, "In Audio {0}", "Input audio {0}");
+    METASOUND_PARAM(OutA, "Out Audio {0}", "Output audio {0}");
+    METASOUND_PARAM(InK, "In Control {0}", "Input control {0}");
+    METASOUND_PARAM(OutK, "Out Control {0}", "Output control {0}");
+}
 
 template<typename DerivedOperator>
 MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
@@ -192,11 +199,11 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Play(int32 CurrentFrame)
     CsoundInstance.Reset();
 
     const char* CsdFilePath = StringCast<ANSICHAR>(**FilePath.Get()).Get();
-    FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
+    const FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
     const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
 
     // WIP Try to only compile one time, not on every Play call - use rewind score???
-    int32 ErrorCode = CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
+    const int32 ErrorCode = CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
     if (ErrorCode != 0)
     {
         // WIP Use CsoundInstance.CreateMessageBuffer() to get the error?
