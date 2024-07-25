@@ -30,10 +30,12 @@ THIRD_PARTY_INCLUDES_END
 // Required for ensuring the node is supported by all languages in engine. Must be unique per MetaSound.
 #define LOCTEXT_NAMESPACE "MetaCsound_CsoundNode"
 
-// WIP: Should I use namespace MetaCsound?
-namespace Metasound
+// WIP: MetaCsound should be a nested namespace with UE::Audio:: or Metasound:: ?
+namespace MetaCsound
 {
-    namespace CsoundNode
+    using namespace Metasound;
+
+    namespace NodeParams
     {
         METASOUND_PARAM(PlayTrig, "Play", "Starts playing Csound");
         METASOUND_PARAM(StopTrig, "Stop", "Stops the Csound performace");
@@ -48,12 +50,8 @@ namespace Metasound
         METASOUND_PARAM(OutK, "Out Control {0}", "Output control {0}");
     }
 
-    DECLARE_METASOUND_DATA_REFERENCE_TYPES(TCHAR, METACSOUND_API, FCharTypeInfo, FCharReadRef, FCharWriteRef);
-
-    METASOUND_PARAM(CharRead, "CharRead", "CharRead");
-
     template<typename DerivedOperator>
-    class METACSOUND_API TCsoundOperator : public TExecutableOperator<DerivedOperator>
+    class TCsoundOperator : public TExecutableOperator<DerivedOperator>
     {
 
     protected:
@@ -67,8 +65,7 @@ namespace Metasound
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels,
             const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger,
-            const TDataReadReference<TCHAR>& InCharReadRef
+            const FTriggerReadRef& InEventTrigger
         );
 
     public:
@@ -123,15 +120,12 @@ namespace Metasound
 
         EOpState OpState;
 
-        TDataReadReference<TCHAR> CharReadRef;
-        //FCharReadRef CharReadRef; // WIP both options don't work
-
         void Play(int32 CurrentFrame);
         void Stop(int32 StopFrame = 0);
         void ClearChannels(int32 StopFrame = 0);
         void CsoundPerformKsmps(int32 CurrentFrame);
     };
-
+    
     class METACSOUND_API FCsoundOperator2 : public TCsoundOperator<FCsoundOperator2>
     {
     public:
@@ -145,13 +139,12 @@ namespace Metasound
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels,
             const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger,
-            const TDataReadReference<TCHAR>& InCharReadRef
+            const FTriggerReadRef& InEventTrigger
         )
         : TCsoundOperator(
             InSettings, InPlayTrigger, InStopTrigger, InFilePath,
             InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
-            InEventString, InEventTrigger, InCharReadRef
+            InEventString, InEventTrigger
         )
         { }
 
@@ -177,7 +170,7 @@ namespace Metasound
         static constexpr int32 NumControlChannelsIn = 2;
         static constexpr int32 NumControlChannelsOut = 2;
     };
-
+    
     class METACSOUND_API FCsoundNode2 : public FNodeFacade
     {
     public:
@@ -202,13 +195,12 @@ namespace Metasound
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels,
             const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger,
-            const TDataReadReference<TCHAR>& InCharReadRef
+            const FTriggerReadRef& InEventTrigger
         )
         : TCsoundOperator(
             InSettings, InPlayTrigger, InStopTrigger, InFilePath,
             InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
-            InEventString, InEventTrigger, InCharReadRef
+            InEventString, InEventTrigger
         )
         { }
 

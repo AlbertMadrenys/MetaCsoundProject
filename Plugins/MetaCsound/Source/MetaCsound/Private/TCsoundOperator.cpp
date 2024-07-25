@@ -34,7 +34,7 @@ THIRD_PARTY_INCLUDES_END
 #define LOCTEXT_NAMESPACE "MetaCsound_CsoundNode"
 
 template<typename DerivedOperator>
-Metasound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
+MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     const FOperatorSettings& InSettings,
     const FTriggerReadRef& InPlayTrigger,
     const FTriggerReadRef& InStopTrigger,
@@ -44,8 +44,7 @@ Metasound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     const TArray<FFloatReadRef>& InControlRefs,
     const int32& InNumOutControlChannels,
     const FStringReadRef& InEventString,
-    const FTriggerReadRef& InEventTrigger,
-    const TDataReadReference<TCHAR>& InCharReadRef)
+    const FTriggerReadRef& InEventTrigger)
     : PlayTrigger(InPlayTrigger)
     , StopTrigger(InStopTrigger)
     , FilePath(InFilePath)
@@ -66,14 +65,7 @@ Metasound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     , Spin(nullptr)
     , Spout(nullptr)
     , OpState(EOpState::Stopped)
-    , CharReadRef(InCharReadRef)
 {
-    // WIP Trying to make my own pin type
-    TDataReferenceTypeInfo<TCHAR>::TypeId;
-    FCharTypeInfo::TypeId;
-    //Metasound::FBoolTypeInfo::TypeName;
-    //Metasound::FCharReadRef readRef = Metasound::FCharReadRef(Metasound::FCharReadRef::CreateNew());
-    //Metasound::FCharReadRef readRef = Metasound::FCharReadRef::CreateNew();
 
     /*
     GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green,
@@ -111,7 +103,7 @@ Metasound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
 }
 
 template<typename DerivedOperator>
-void Metasound::TCsoundOperator<DerivedOperator>::Execute()
+void MetaCsound::TCsoundOperator<DerivedOperator>::Execute()
 {
     if (OpState == EOpState::Error)
     {
@@ -194,7 +186,7 @@ void Metasound::TCsoundOperator<DerivedOperator>::Execute()
 }
 
 template<typename DerivedOperator>
-void Metasound::TCsoundOperator<DerivedOperator>::Play(int32 CurrentFrame)
+void MetaCsound::TCsoundOperator<DerivedOperator>::Play(int32 CurrentFrame)
 {
     CsoundInstance.Reset();
 
@@ -229,7 +221,7 @@ void Metasound::TCsoundOperator<DerivedOperator>::Play(int32 CurrentFrame)
 }
 
 template<typename DerivedOperator>
-void Metasound::TCsoundOperator<DerivedOperator>::Stop(int32 StopFrame)
+void MetaCsound::TCsoundOperator<DerivedOperator>::Stop(int32 StopFrame)
 {
     OpState = EOpState::Stopped;
 
@@ -238,7 +230,7 @@ void Metasound::TCsoundOperator<DerivedOperator>::Stop(int32 StopFrame)
 }
 
 template<typename DerivedOperator>
-void Metasound::TCsoundOperator<DerivedOperator>::ClearChannels(int32 StopFrame)
+void MetaCsound::TCsoundOperator<DerivedOperator>::ClearChannels(int32 StopFrame)
 {
     // WIP add bool to know the previous StopFrame value? 
     for (int32 i = 0; i < AudioOutRefs.Num(); i++)
@@ -263,7 +255,7 @@ void Metasound::TCsoundOperator<DerivedOperator>::ClearChannels(int32 StopFrame)
 }
 
 template<typename DerivedOperator>
-void Metasound::TCsoundOperator<DerivedOperator>::CsoundPerformKsmps(int32 CurrentFrame)
+void MetaCsound::TCsoundOperator<DerivedOperator>::CsoundPerformKsmps(int32 CurrentFrame)
 {
     SpIndex = 0;
     if (CsoundInstance.PerformKsmps() != 0)
@@ -273,7 +265,7 @@ void Metasound::TCsoundOperator<DerivedOperator>::CsoundPerformKsmps(int32 Curre
 }
 
 template<typename DerivedOperator>
-const Metasound::FNodeClassMetadata& Metasound::TCsoundOperator<DerivedOperator>::GetNodeInfo()
+const Metasound::FNodeClassMetadata& MetaCsound::TCsoundOperator<DerivedOperator>::GetNodeInfo()
 {
     auto CreateNodeClassMetadata = []() -> FNodeClassMetadata
         {
@@ -297,9 +289,9 @@ const Metasound::FNodeClassMetadata& Metasound::TCsoundOperator<DerivedOperator>
 }
 
 template<typename DerivedOperator>
-const Metasound::FVertexInterface& Metasound::TCsoundOperator<DerivedOperator>::DeclareVertexInterface()
+const Metasound::FVertexInterface& MetaCsound::TCsoundOperator<DerivedOperator>::DeclareVertexInterface()
 {
-    using namespace Metasound::CsoundNode;
+    using namespace NodeParams;
 
     FInputVertexInterface InputVertex;
     InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(PlayTrig)));
@@ -330,16 +322,14 @@ const Metasound::FVertexInterface& Metasound::TCsoundOperator<DerivedOperator>::
         OutputVertex.Add(TOutputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(OutK, i)));
     }
 
-    InputVertex.Add(TInputDataVertex<TCHAR>(METASOUND_GET_PARAM_NAME_AND_METADATA(CharRead)));
-
     static const FVertexInterface VertexInterface(InputVertex, OutputVertex);
     return VertexInterface;
 }
 
 template<typename DerivedOperator>
-Metasound::FDataReferenceCollection Metasound::TCsoundOperator<DerivedOperator>::GetInputs() const
+Metasound::FDataReferenceCollection MetaCsound::TCsoundOperator<DerivedOperator>::GetInputs() const
 {
-    using namespace Metasound::CsoundNode;
+    using namespace NodeParams;
 
     FDataReferenceCollection InputDataReferences;
 
@@ -360,15 +350,13 @@ Metasound::FDataReferenceCollection Metasound::TCsoundOperator<DerivedOperator>:
     InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvStr), EventString);
     InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(EvTrig), EventTrigger);
 
-    InputDataReferences.AddDataReadReference(METASOUND_GET_PARAM_NAME(CharRead), CharReadRef);
-
     return InputDataReferences;
 }
 
 template<typename DerivedOperator>
-Metasound::FDataReferenceCollection Metasound::TCsoundOperator<DerivedOperator>::GetOutputs() const
+Metasound::FDataReferenceCollection MetaCsound::TCsoundOperator<DerivedOperator>::GetOutputs() const
 {
-    using namespace Metasound::CsoundNode;
+    using namespace NodeParams;
 
     FDataReferenceCollection OutputDataReferences;
 
@@ -388,9 +376,9 @@ Metasound::FDataReferenceCollection Metasound::TCsoundOperator<DerivedOperator>:
 }
 
 template<typename DerivedOperator>
-TUniquePtr<Metasound::IOperator> Metasound::TCsoundOperator<DerivedOperator>::CreateOperator(const FCreateOperatorParams& InParams, TArray<TUniquePtr<IOperatorBuildError>>& OutErrors)
+TUniquePtr<Metasound::IOperator> MetaCsound::TCsoundOperator<DerivedOperator>::CreateOperator(const FCreateOperatorParams& InParams, TArray<TUniquePtr<IOperatorBuildError>>& OutErrors)
 {
-    using namespace Metasound::CsoundNode;
+    using namespace NodeParams;
 
     const FDataReferenceCollection& InputCollection = InParams.InputDataReferences;
     const FInputVertexInterface& InputInterface = DeclareVertexInterface().GetInputInterface();
@@ -436,17 +424,13 @@ TUniquePtr<Metasound::IOperator> Metasound::TCsoundOperator<DerivedOperator>::Cr
             ));
     }
 
-    TDataReadReference<TCHAR> CharReadRef = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<TCHAR>
-        (InputInterface, METASOUND_GET_PARAM_NAME(CharRead), InParams.OperatorSettings);
-
     return MakeUnique<DerivedOperator>(
         InParams.OperatorSettings,
         PlayTrigger, StopTrigger,
         CsoundFP,
         AudioInArray, DerivedOperator::NumAudioChannelsOut,
         ControlInArray, DerivedOperator::NumControlChannelsOut,
-        EvString, EvTrigger,
-        CharReadRef
+        EvString, EvTrigger
     );
 }
 
