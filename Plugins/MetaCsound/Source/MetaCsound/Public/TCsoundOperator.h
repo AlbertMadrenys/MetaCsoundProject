@@ -110,6 +110,7 @@ namespace MetaCsound
         double* Spin, * Spout;
         int32 CsoundNchnlsIn, CsoundNchnlsOut, MinAudioIn, MinAudioOut;
         int32 CsoundKsmps;
+        int32 FirstClearedFrame;
 
         enum class EOpState : uint8
         {
@@ -122,7 +123,7 @@ namespace MetaCsound
 
         void Play(int32 CurrentFrame);
         void Stop(int32 StopFrame = 0);
-        void ClearChannels(int32 StopFrame = 0);
+        void ClearChannels(int32 StartClearingFrame = 0);
         void CsoundPerformKsmps(int32 CurrentFrame);
     };
     

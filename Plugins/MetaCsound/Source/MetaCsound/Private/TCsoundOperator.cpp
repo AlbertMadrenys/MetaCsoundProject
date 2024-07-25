@@ -64,6 +64,7 @@ MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     , SpIndex(0)
     , Spin(nullptr)
     , Spout(nullptr)
+    , FirstClearedFrame(InSettings.GetNumFramesPerBlock())
     , OpState(EOpState::Stopped)
 {
 
@@ -216,6 +217,7 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Play(int32 CurrentFrame)
     MinAudioIn = BuffersIn.Num() <= CsoundNchnlsIn ? BuffersIn.Num() : CsoundNchnlsIn;
     MinAudioOut = BuffersOut.Num() <= CsoundNchnlsOut ? BuffersOut.Num() : CsoundNchnlsOut;
     CsoundKsmps = (uint32)CsoundInstance.GetKsmps();
+    FirstClearedFrame = OpSettings.GetNumFramesPerBlock();
 
     CsoundPerformKsmps(CurrentFrame);
 }
@@ -230,23 +232,30 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Stop(int32 StopFrame)
 }
 
 template<typename DerivedOperator>
-void MetaCsound::TCsoundOperator<DerivedOperator>::ClearChannels(int32 StopFrame)
+void MetaCsound::TCsoundOperator<DerivedOperator>::ClearChannels(int32 StartClearingFrame)
 {
-    // WIP add bool to know the previous StopFrame value? 
+    if (FirstClearedFrame <= StartClearingFrame)
+    {
+        // Already cleared
+        return;
+    }
+
     for (int32 i = 0; i < AudioOutRefs.Num(); i++)
     {
-        if (StopFrame == 0)
+        if (StartClearingFrame == 0)
         {
             AudioOutRefs[i]->Zero();
         }
         else
         {
-            for (int32 f = StopFrame; f < OpSettings.GetNumFramesPerBlock(); f++)
+            for (int32 f = StartClearingFrame; f < OpSettings.GetNumFramesPerBlock(); f++)
             {
                 BuffersOut[i][f] = 0.; // WIP do this with iterators or an available method?
             }
         }
     }
+
+    FirstClearedFrame = StartClearingFrame;
 
     for (int32 i = 0; i < ControlOutRefs.Num(); i++)
     {
