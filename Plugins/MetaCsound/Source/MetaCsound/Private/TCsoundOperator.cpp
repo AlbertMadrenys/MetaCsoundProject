@@ -198,7 +198,10 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Play(int32 CurrentFrame)
 {
     CsoundInstance.Reset();
 
-    const char* CsdFilePath = StringCast<ANSICHAR>(**FilePath.Get()).Get();
+    const FString FullPath = FPaths::ProjectContentDir() + TEXT("CsoundFiles/") + *FilePath.Get() + TEXT(".csd");
+    const char* CsdFilePath = StringCast<ANSICHAR>(*FullPath).Get();
+    UE_LOG(LogTemp, Warning, TEXT("Csound test file: %s"), *FullPath);
+
     const FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
     const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
 
@@ -363,7 +366,7 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::BindInputs(FInputVertexInterf
     {
         InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME_WITH_INDEX(InK, i), ControlInRefs[i]);
     }
-
+    
     InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(EvStr), EventString);
     InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(EvTrig), EventTrigger);
 }
