@@ -16,17 +16,6 @@ public class MyProject2 : ModuleRules
 				"Engine",
 				"InputCore",
 				"EnhancedInput",
-
-				"Projects",
-				"SignalProcessing",
-				"AudioExtensions",
-
-				"MetasoundEngine",
-				"MetasoundGraphCore",
-				"MetasoundFrontend",
-				"MetasoundEditor",
-
-				"MetaCsound",
 			}
 		);
 	}

@@ -25,7 +25,6 @@
 		{
 			"Name": "Metasound",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
 			"Enabled": true
 		}
 	]

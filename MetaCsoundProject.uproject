@@ -21,13 +21,11 @@
 		{
 			"Name": "Metasound",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
 			"Enabled": true
 		},
 		{
 			"Name": "MetaCsound",
 			"Type": "Runtime",
-			"LoadingPhase": "PostDefault",
 			"Enabled": true
 		},
 		{

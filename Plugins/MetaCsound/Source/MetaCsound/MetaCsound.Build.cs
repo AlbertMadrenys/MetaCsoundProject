@@ -21,12 +21,6 @@ public class MetaCsound : ModuleRules
 			new string[]
 			{
 				"Core",
-				"CoreUObject",
-				"Engine",
-				"Projects",
-				"SignalProcessing",
-				"AudioExtensions",
-				"MetasoundEngine",
 				"MetasoundGraphCore",
 				"MetasoundFrontend",
 				"MetasoundEditor",
@@ -37,7 +31,9 @@ public class MetaCsound : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-			}
+                "CoreUObject",
+                "Engine",
+            }
 			);
 
 		// Include the import library
