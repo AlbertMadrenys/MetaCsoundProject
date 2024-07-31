@@ -48,9 +48,7 @@ namespace MetaCsound
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
             const TArray<FFloatReadRef>& InControlRefs,
-            const int32& InNumOutControlChannels,
-            const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger
+            const int32& InNumOutControlChannels
         );
 
     public:
@@ -72,8 +70,6 @@ namespace MetaCsound
         FTriggerReadRef PlayTrigger;
         FTriggerReadRef StopTrigger;
         FStringReadRef FilePath;
-        FStringReadRef EventString;
-        FTriggerReadRef EventTrigger;
         FTriggerWriteRef FinishedTrigger;
 
         TArray<FAudioBufferReadRef> AudioInRefs;
@@ -121,14 +117,11 @@ namespace MetaCsound
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
             const TArray<FFloatReadRef>& InControlRefs,
-            const int32& InNumOutControlChannels,
-            const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger
+            const int32& InNumOutControlChannels
         )
         : TCsoundOperator(
             InSettings, InPlayTrigger, InStopTrigger, InFilePath,
-            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
-            InEventString, InEventTrigger
+            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels
         )
         { }
 
@@ -177,14 +170,11 @@ namespace MetaCsound
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
             const TArray<FFloatReadRef>& InControlRefs,
-            const int32& InNumOutControlChannels,
-            const FStringReadRef& InEventString,
-            const FTriggerReadRef& InEventTrigger
+            const int32& InNumOutControlChannels
         )
         : TCsoundOperator(
             InSettings, InPlayTrigger, InStopTrigger, InFilePath,
-            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels,
-            InEventString, InEventTrigger
+            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels
         )
         { }
 

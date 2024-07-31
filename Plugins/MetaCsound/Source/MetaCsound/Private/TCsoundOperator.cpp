@@ -30,8 +30,6 @@ namespace MetaCsound::NodeParams
     METASOUND_PARAM(PlayTrig, "Play", "Starts playing Csound");
     METASOUND_PARAM(StopTrig, "Stop", "Stops the Csound performace");
     METASOUND_PARAM(FilePath, "File", "Path of the .csd file to be executed by Csound");
-    METASOUND_PARAM(EvStr, "Event String", "The string that contains a Csound event");
-    METASOUND_PARAM(EvTrig, "Event Trigger", "Triggers the Csound event descrived by EventString");
     METASOUND_PARAM(FinTrig, "On Finished", "Triggers when the Csound score has finished");
 
     METASOUND_PARAM(InA, "In Audio {0}", "Input audio {0}");
@@ -49,14 +47,10 @@ MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     const TArray<FAudioBufferReadRef>& InAudioRefs,
     const int32& InNumOutAudioChannels,
     const TArray<FFloatReadRef>& InControlRefs,
-    const int32& InNumOutControlChannels,
-    const FStringReadRef& InEventString,
-    const FTriggerReadRef& InEventTrigger)
+    const int32& InNumOutControlChannels)
     : PlayTrigger(InPlayTrigger)
     , StopTrigger(InStopTrigger)
     , FilePath(InFilePath)
-    , EventString(InEventString)
-    , EventTrigger(InEventTrigger)
     , FinishedTrigger(FTriggerWriteRef::CreateNew(InSettings))
     , AudioInRefs(InAudioRefs)
     , BuffersIn()
@@ -151,17 +145,6 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Execute()
         if (OpState != EOpState::Playing)
         {
             continue;
-        }
-
-        // WIP all of this code into their own method?
-        for (int32 i = 0; i < EventTrigger->Num(); i++)
-        {
-            if ((*EventTrigger)[i] == f)
-            {
-                // WIP The string might not be the correct one if EventTrigger->Num() > 1
-                const char* EventCString = StringCast<ANSICHAR>(**EventString.Get()).Get();
-                CsoundInstance.InputMessage(EventCString);
-            }
         }
 
         for (int32 i = 0; i < MinAudioIn; i++)
@@ -328,9 +311,6 @@ const Metasound::FVertexInterface& MetaCsound::TCsoundOperator<DerivedOperator>:
         InputVertex.Add(TInputDataVertex<float>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InK, i)));
     }
 
-    InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(EvStr)));
-    InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(EvTrig)));
-
     FOutputVertexInterface OutputVertex;
     OutputVertex.Add(TOutputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(FinTrig)));
     for (int32 i = 0; i < DerivedOperator::NumAudioChannelsOut; i++)
@@ -368,9 +348,6 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::BindInputs(FInputVertexInterf
     {
         InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME_WITH_INDEX(InK, i), ControlInRefs[i]);
     }
-    
-    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(EvStr), EventString);
-    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(EvTrig), EventTrigger);
 }
 
 template<typename DerivedOperator>
@@ -403,12 +380,9 @@ TUniquePtr<Metasound::IOperator> MetaCsound::TCsoundOperator<DerivedOperator>::C
         (InputInterface, METASOUND_GET_PARAM_NAME(PlayTrig), InParams.OperatorSettings);
     TDataReadReference<FTrigger> StopTrigger = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FTrigger>
         (InputInterface, METASOUND_GET_PARAM_NAME(StopTrig), InParams.OperatorSettings);
+    // WIP Change this name
     TDataReadReference<FString> CsoundFP = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
         (InputInterface, METASOUND_GET_PARAM_NAME(FilePath), InParams.OperatorSettings);
-    TDataReadReference<FString> EvString = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
-        (InputInterface, METASOUND_GET_PARAM_NAME(EvStr), InParams.OperatorSettings);
-    TDataReadReference<FTrigger> EvTrigger = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FTrigger>
-        (InputInterface, METASOUND_GET_PARAM_NAME(EvTrig), InParams.OperatorSettings);
 
     TArray<TDataReadReference<FAudioBuffer>> AudioInArray;
     AudioInArray.Empty(DerivedOperator::NumAudioChannelsIn);
@@ -445,8 +419,7 @@ TUniquePtr<Metasound::IOperator> MetaCsound::TCsoundOperator<DerivedOperator>::C
         PlayTrigger, StopTrigger,
         CsoundFP,
         AudioInArray, DerivedOperator::NumAudioChannelsOut,
-        ControlInArray, DerivedOperator::NumControlChannelsOut,
-        EvString, EvTrigger
+        ControlInArray, DerivedOperator::NumControlChannelsOut
     );
 }
 
