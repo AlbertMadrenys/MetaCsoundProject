@@ -34,7 +34,7 @@ namespace MetaCsound
         TCsoundOperator(const FOperatorSettings& InSettings,
             const FTriggerReadRef& InPlayTrigger,
             const FTriggerReadRef& InStopTrigger,
-            const FStringReadRef& InFilePath,
+            const FStringReadRef& InCsoundFile,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
             const TArray<FFloatReadRef>& InControlRefs,
@@ -59,7 +59,7 @@ namespace MetaCsound
 
         FTriggerReadRef PlayTrigger;
         FTriggerReadRef StopTrigger;
-        FStringReadRef FilePath;
+        FStringReadRef CsoundFile;
         FTriggerWriteRef FinishedTrigger;
 
         TArray<FAudioBufferReadRef> AudioInRefs;
@@ -103,14 +103,14 @@ namespace MetaCsound
         FCsoundOperator2(const FOperatorSettings& InSettings,
             const FTriggerReadRef& InPlayTrigger,
             const FTriggerReadRef& InStopTrigger,
-            const FStringReadRef& InFilePath,
+            const FStringReadRef& InCsoundFile,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels
         )
         : TCsoundOperator(
-            InSettings, InPlayTrigger, InStopTrigger, InFilePath,
+            InSettings, InPlayTrigger, InStopTrigger, InCsoundFile,
             InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels
         )
         { }
@@ -156,14 +156,14 @@ namespace MetaCsound
         FCsoundOperator4(const FOperatorSettings& InSettings,
             const FTriggerReadRef& InPlayTrigger,
             const FTriggerReadRef& InStopTrigger,
-            const FStringReadRef& InFilePath,
+            const FStringReadRef& InCsoundFile,
             const TArray<FAudioBufferReadRef>& InAudioRefs,
             const int32& InNumOutAudioChannels,
             const TArray<FFloatReadRef>& InControlRefs,
             const int32& InNumOutControlChannels
         )
         : TCsoundOperator(
-            InSettings, InPlayTrigger, InStopTrigger, InFilePath,
+            InSettings, InPlayTrigger, InStopTrigger, InCsoundFile,
             InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels
         )
         { }

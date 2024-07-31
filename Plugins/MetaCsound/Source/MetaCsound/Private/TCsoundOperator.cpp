@@ -10,7 +10,7 @@ namespace MetaCsound::NodeParams
 {
     METASOUND_PARAM(PlayTrig, "Play", "Starts playing Csound");
     METASOUND_PARAM(StopTrig, "Stop", "Stops the Csound performace");
-    METASOUND_PARAM(FilePath, "File", "Path of the .csd file to be executed by Csound");
+    METASOUND_PARAM(CsoundFile, "File", "Name of the .csd file to be executed by Csound");
     METASOUND_PARAM(FinTrig, "On Finished", "Triggers when the Csound score has finished");
 
     METASOUND_PARAM(InA, "In Audio {0}", "Input audio {0}");
@@ -24,14 +24,14 @@ MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     const FOperatorSettings& InSettings,
     const FTriggerReadRef& InPlayTrigger,
     const FTriggerReadRef& InStopTrigger,
-    const FStringReadRef& InFilePath,
+    const FStringReadRef& InCsoundFile,
     const TArray<FAudioBufferReadRef>& InAudioRefs,
     const int32& InNumOutAudioChannels,
     const TArray<FFloatReadRef>& InControlRefs,
     const int32& InNumOutControlChannels)
     : PlayTrigger(InPlayTrigger)
     , StopTrigger(InStopTrigger)
-    , FilePath(InFilePath)
+    , CsoundFile(InCsoundFile)
     , FinishedTrigger(FTriggerWriteRef::CreateNew(InSettings))
     , AudioInRefs(InAudioRefs)
     , BuffersIn()
@@ -160,23 +160,24 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Execute()
 template<typename DerivedOperator>
 void MetaCsound::TCsoundOperator<DerivedOperator>::Play(int32 CurrentFrame)
 {
+    // TODO: Use CsoundInstance.RewindScore(), but its not important, compile is very quick
     CsoundInstance.Reset();
 
-    // WIP Change name of the content folder?
-    // WIP Make .csd files appear on the Content Browser in Editor
-    const FString FullPath = FPaths::ProjectContentDir() + TEXT("CsoundFiles/") + *FilePath.Get() + TEXT(".csd");
-    const char* CsdFilePath = StringCast<ANSICHAR>(*FullPath).Get();
-    //UE_LOG(LogTemp, Warning, TEXT("Csound test file: %s"), *FullPath);
+    const FString FullPath = FPaths::ProjectContentDir() + TEXT("CsoundFiles/") + *CsoundFile.Get() + TEXT(".csd");
+    const char* FullPathANSI = StringCast<ANSICHAR>(*FullPath).Get();
 
-    const FString SrOptionFString = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
-    const char* SrOption = StringCast<ANSICHAR>(*SrOptionFString).Get();
+    const FString SrOption = "--sample-rate=" + FString::FromInt((int)OpSettings.GetSampleRate());
+    const char* SrOptionANSI = StringCast<ANSICHAR>(*SrOption).Get();
 
-    // WIP Try to only compile one time, not on every Play call - use rewind score???
-    const int32 ErrorCode = CsoundInstance.Compile(CsdFilePath, SrOption, "-n");
+    const int32 ErrorCode = CsoundInstance.Compile(FullPathANSI, SrOptionANSI, "-n");
+    //CsoundInstance.SetOption(SrOptionANSI);
+    //CsoundInstance.SetOption("-n");
+    //const int32 ErrorCode = CsoundInstance.CompileCsd(FullPathANSI);
+    
     if (ErrorCode != 0)
     {
-        // WIP Use CsoundInstance.CreateMessageBuffer() to get the error?
-        UE_LOG(LogMetaSound, Error, TEXT("Not able to compile Csound file: %s"), **FilePath.Get());
+        // TODO: Use CsoundInstance.CreateMessageBuffer() to capture the error
+        UE_LOG(LogMetaSound, Error, TEXT("Not able to compile Csound file: %s"), *FullPath);
         OpState = EOpState::Error;
         return;
     }
@@ -281,7 +282,7 @@ const Metasound::FVertexInterface& MetaCsound::TCsoundOperator<DerivedOperator>:
     FInputVertexInterface InputVertex;
     InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(PlayTrig)));
     InputVertex.Add(TInputDataVertex<FTrigger>(METASOUND_GET_PARAM_NAME_AND_METADATA(StopTrig)));
-    InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(FilePath)));
+    InputVertex.Add(TInputDataVertex<FString>(METASOUND_GET_PARAM_NAME_AND_METADATA(CsoundFile)));
     for (int32 i = 0; i < DerivedOperator::NumAudioChannelsIn; i++)
     {
         InputVertex.Add(TInputDataVertex<FAudioBuffer>(METASOUND_GET_PARAM_NAME_WITH_INDEX_AND_METADATA(InA, i)));
@@ -318,7 +319,7 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::BindInputs(FInputVertexInterf
 
     InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(PlayTrig), PlayTrigger);
     InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(StopTrig), StopTrigger);
-    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(FilePath), FilePath);
+    InOutVertexData.BindReadVertex(METASOUND_GET_PARAM_NAME(CsoundFile), CsoundFile);
 
     for (int32 i = 0; i < AudioInRefs.Num(); i++)
     {
@@ -361,9 +362,8 @@ TUniquePtr<Metasound::IOperator> MetaCsound::TCsoundOperator<DerivedOperator>::C
         (InputInterface, METASOUND_GET_PARAM_NAME(PlayTrig), InParams.OperatorSettings);
     TDataReadReference<FTrigger> StopTrigger = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FTrigger>
         (InputInterface, METASOUND_GET_PARAM_NAME(StopTrig), InParams.OperatorSettings);
-    // WIP Change this name
-    TDataReadReference<FString> CsoundFP = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
-        (InputInterface, METASOUND_GET_PARAM_NAME(FilePath), InParams.OperatorSettings);
+    TDataReadReference<FString> CsoundFileString = InputCollection.GetDataReadReferenceOrConstructWithVertexDefault<FString>
+        (InputInterface, METASOUND_GET_PARAM_NAME(CsoundFile), InParams.OperatorSettings);
 
     TArray<TDataReadReference<FAudioBuffer>> AudioInArray;
     AudioInArray.Empty(DerivedOperator::NumAudioChannelsIn);
@@ -398,7 +398,7 @@ TUniquePtr<Metasound::IOperator> MetaCsound::TCsoundOperator<DerivedOperator>::C
     return MakeUnique<DerivedOperator>(
         InParams.OperatorSettings,
         PlayTrigger, StopTrigger,
-        CsoundFP,
+        CsoundFileString,
         AudioInArray, DerivedOperator::NumAudioChannelsOut,
         ControlInArray, DerivedOperator::NumControlChannelsOut
     );
