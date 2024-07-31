@@ -1,10 +1,8 @@
 #pragma once
 
-// Is this still necessary? WIP
 #ifdef LIKELY
     #undef LIKELY
 #endif
-
 #ifdef UNLIKELY
     #undef UNLIKELY
 #endif
@@ -18,14 +16,6 @@ THIRD_PARTY_INCLUDES_END
 #include "MetasoundNodeRegistrationMacro.h"  // METASOUND_LOCTEXT and METASOUND_REGISTER_NODE macros
 #include "MetasoundFacade.h"				 // FNodeFacade class, eliminates the need for a fair amount of boilerplate code
 #include "Containers/Array.h"
-
-// WIP trying to create my own pin type
-#include "MetasoundDataTypeRegistrationMacro.h"
-#include "MetasoundDataReferenceMacro.h"
-#include "MetasoundDataReference.h"
-#include "MetasoundVariable.h"
-
-#include "MetaCsound.h"
 
 // Required for ensuring the node is supported by all languages in engine. Must be unique per MetaSound.
 #define LOCTEXT_NAMESPACE "MetaCsound_CsoundNode"

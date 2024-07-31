@@ -1,26 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TCsoundOperator.h"
-
-// Is this still necessary? WIP
-#ifdef LIKELY
-    #undef LIKELY
-#endif
-
-#ifdef UNLIKELY
-    #undef UNLIKELY
-#endif
-
-THIRD_PARTY_INCLUDES_START
-#include <csound.hpp>
-THIRD_PARTY_INCLUDES_END
-
-#include "MetasoundExecutableOperator.h"     // TExecutableOperator class
-#include "MetasoundPrimitives.h"             // ReadRef and WriteRef descriptions for bool, int32, float, and string
 #include "MetasoundParamHelper.h"            // METASOUND_PARAM and METASOUND_GET_PARAM family of macros
-#include "Containers/Array.h"
-
-#include "MetaCsound.h"
 
 // Required for ensuring the node is supported by all languages in engine. Must be unique per MetaSound.
 #define LOCTEXT_NAMESPACE "MetaCsound_CsoundNode"
