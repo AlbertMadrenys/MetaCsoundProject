@@ -73,7 +73,7 @@ MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     ControlInNames.Empty(ControlInRefs.Num());
     for (int32 i = 0; i < ControlInRefs.Num(); i++)
     {
-        ControlInNames.Add("InK_" + FString::FromInt(i)); // WIP Change name
+        ControlInNames.Add("InK_" + FString::FromInt(i)); // WIP Change name "In Control 0"
     }
 
     ControlOutRefs.Empty(InNumOutControlChannels);
@@ -130,7 +130,6 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Execute()
 
         for (int32 i = 0; i < MinAudioIn; i++)
         {
-            // WIP Use version of Csound that uses floats instead of doubles?
             Spin[SpIndex * CsoundNchnlsIn + i] = (double)(BuffersIn[i][f]);
         }
 
@@ -143,7 +142,7 @@ void MetaCsound::TCsoundOperator<DerivedOperator>::Execute()
         {
             for (int32 i = 0; i < ControlInNames.Num(); i++)
             {
-                // Use FString::Format instead of keeping the strings in an array?
+                // TODO: Use FString::Format instead of keeping the strings in an array?
                 CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*ControlInNames[i]).Get(), (double)*(ControlInRefs[i]));
             }
 

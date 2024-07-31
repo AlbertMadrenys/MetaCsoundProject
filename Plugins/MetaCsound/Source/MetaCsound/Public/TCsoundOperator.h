@@ -20,7 +20,6 @@ THIRD_PARTY_INCLUDES_END
 // Required for ensuring the node is supported by all languages in engine. Must be unique per MetaSound.
 #define LOCTEXT_NAMESPACE "MetaCsound_CsoundNode"
 
-// WIP: MetaCsound should be a nested namespace with UE::Audio:: or Metasound:: ?
 namespace MetaCsound
 {
     using namespace Metasound;
@@ -99,7 +98,7 @@ namespace MetaCsound
     class METACSOUND_API FCsoundOperator2 : public TCsoundOperator<FCsoundOperator2>
     {
     public:
-        // WIP create struct that has all of the arguments, to avoid such long constructors?
+        // TODO: create struct that has all of the arguments, to avoid such long constructors?
         FCsoundOperator2(const FOperatorSettings& InSettings,
             const FTriggerReadRef& InPlayTrigger,
             const FTriggerReadRef& InStopTrigger,
@@ -115,7 +114,7 @@ namespace MetaCsound
         )
         { }
 
-        // WIP inline?
+        // TODO: inline?
         static const FNodeClassName GetClassName() 
         {
             // WIP What is Audio? Could we use "Csound" instead?

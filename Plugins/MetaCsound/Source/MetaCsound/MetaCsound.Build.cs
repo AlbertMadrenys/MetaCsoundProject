@@ -9,14 +9,6 @@ public class MetaCsound : ModuleRules
 
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicIncludePaths.AddRange(
-			new string[]
-			{
-				"C:/Program Files/Csound6_x64/include/csound/",
-			}
-			);
-
-
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -27,7 +19,6 @@ public class MetaCsound : ModuleRules
 			}
 			);
 
-
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -36,17 +27,22 @@ public class MetaCsound : ModuleRules
             }
 			);
 
-		// Include the import library
-		//PublicAdditionalLibraries.Add(Path.Combine(ModuleDirectory, "..", "ThirdParty", "lib_win64_import_example.lib"));
-		PublicAdditionalLibraries.Add("C:/Program Files/Csound6_x64/lib/csound64.lib");
+		// TODO: Add Linux and macOS dependencies
+
+        PublicIncludePaths.AddRange(
+			new string[]
+			{
+				"C:/Program Files/Csound6_x64/include/csound/",
+			}
+			);
+
+        // Include the import library
+        PublicAdditionalLibraries.Add("C:/Program Files/Csound6_x64/lib/csound64.lib");
 
 		// Put the library along with the executable
-		//RuntimeDependencies.Add("$(PluginDir)/ThirdParty/lib_win64_example.dll");
 		RuntimeDependencies.Add("C:/Program Files/Csound6_x64/bin/csound64.dll");
-		// WIP Include sndfile.dll
 
 		// Load library
-		//PublicDelayLoadDLLs.Add("lib_win64_example.dll");
 		PublicDelayLoadDLLs.Add("csound64.dll");
 
 		bEnableUndefinedIdentifierWarnings = false;
