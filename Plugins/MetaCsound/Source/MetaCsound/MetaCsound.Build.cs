@@ -15,7 +15,6 @@ public class MetaCsound : ModuleRules
 				"Core",
 				"MetasoundGraphCore",
 				"MetasoundFrontend",
-				"MetasoundEditor",
 			}
 			);
 
@@ -39,8 +38,10 @@ public class MetaCsound : ModuleRules
         // Include the import library
         PublicAdditionalLibraries.Add("C:/Program Files/Csound6_x64/lib/csound64.lib");
 
-		// Put the library along with the executable
-		RuntimeDependencies.Add("C:/Program Files/Csound6_x64/bin/csound64.dll");
+		// Unreal can't deploy dlls outside the plugin folder or in Unreal folder.
+		// Csound6 will have to be installed manually
+		// TODO: Deploy Csound when packaging game?
+		//RuntimeDependencies.Add("C:/Program Files/Csound6_x64/bin/csound64.dll");
 
 		// Load library
 		PublicDelayLoadDLLs.Add("csound64.dll");

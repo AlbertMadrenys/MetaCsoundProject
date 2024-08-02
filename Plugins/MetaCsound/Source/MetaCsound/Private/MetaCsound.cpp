@@ -2,8 +2,6 @@
 
 #include "MetaCsound.h"
 #include "MetasoundFrontendRegistries.h"
-#include "Interfaces/IPluginManager.h"
-#include "MetasoundEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "FMetaCsoundModule"
 
@@ -36,6 +34,10 @@ void FMetaCsoundModule::ShutdownModule()
 	// we call this function before unloading the module.
 }
 
+#undef LOCTEXT_NAMESPACE
+	
+IMPLEMENT_MODULE(FMetaCsoundModule, MetaCsound)
+
 // This caused a Link2001 error! Maybe if I solve this I'll be able to solve the other problems?
 /*
 namespace Metasound
@@ -46,7 +48,3 @@ namespace Metasound
 		const FName AudioVariant = "Audio";
 	}
 }*/
-
-#undef LOCTEXT_NAMESPACE
-	
-IMPLEMENT_MODULE(FMetaCsoundModule, MetaCsound)
