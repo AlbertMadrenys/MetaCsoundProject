@@ -18,7 +18,7 @@ THIRD_PARTY_INCLUDES_END
 #include "Containers/Array.h"
 
 // Required for ensuring the node is supported by all languages in engine. Must be unique per MetaSound.
-#define LOCTEXT_NAMESPACE "MetaCsound_CsoundNode"
+#define LOCTEXT_NAMESPACE "MetaCsound_TCsoundOperator"
 
 namespace MetaCsound
 {
@@ -94,112 +94,6 @@ namespace MetaCsound
         void ClearChannels(int32 StartClearingFrame = 0);
         void CsoundPerformKsmps(int32 CurrentFrame);
     };
-    
-    class METACSOUND_API FCsoundOperator2 : public TCsoundOperator<FCsoundOperator2>
-    {
-    public:
-        // TODO: create struct that has all of the arguments, to avoid such long constructors?
-        FCsoundOperator2(const FOperatorSettings& InSettings,
-            const FTriggerReadRef& InPlayTrigger,
-            const FTriggerReadRef& InStopTrigger,
-            const FStringReadRef& InCsoundFile,
-            const TArray<FAudioBufferReadRef>& InAudioRefs,
-            const int32& InNumOutAudioChannels,
-            const TArray<FFloatReadRef>& InControlRefs,
-            const int32& InNumOutControlChannels
-        )
-        : TCsoundOperator(
-            InSettings, InPlayTrigger, InStopTrigger, InCsoundFile,
-            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels
-        )
-        { }
-
-        // TODO: inline?
-        static const FNodeClassName GetClassName() 
-        {
-            // WIP What is Audio? Could we use "Csound" instead?
-            return { TEXT("MetaCsound"), TEXT("Csound 2"), TEXT("Audio") }; 
-        }
-
-        static const FText GetDisplayName()
-        {
-            return LOCTEXT("MetaCsound_Node2DisplayName", "Csound 2");
-        }
-
-        static const FText GetDescription()
-        {
-            return LOCTEXT("MetaCsound_Node2Desc", "Csound 2 description");
-        }
-
-        static constexpr int32 NumAudioChannelsIn = 2;
-        static constexpr int32 NumAudioChannelsOut = 2;
-        static constexpr int32 NumControlChannelsIn = 2;
-        static constexpr int32 NumControlChannelsOut = 2;
-    };
-    
-    class METACSOUND_API FCsoundNode2 : public FNodeFacade
-    {
-    public:
-        FCsoundNode2(const FNodeInitData& InitData) : FNodeFacade(InitData.InstanceName, InitData.InstanceID,
-            TFacadeOperatorClass<FCsoundOperator2>())
-        { }
-    };
-
-    // Register node
-    METASOUND_REGISTER_NODE(FCsoundNode2); // WIP Node registration using module startup/shutdown?
-
-    class METACSOUND_API FCsoundOperator4 : public TCsoundOperator<FCsoundOperator4>
-    {
-    public:
-        
-        FCsoundOperator4(const FOperatorSettings& InSettings,
-            const FTriggerReadRef& InPlayTrigger,
-            const FTriggerReadRef& InStopTrigger,
-            const FStringReadRef& InCsoundFile,
-            const TArray<FAudioBufferReadRef>& InAudioRefs,
-            const int32& InNumOutAudioChannels,
-            const TArray<FFloatReadRef>& InControlRefs,
-            const int32& InNumOutControlChannels
-        )
-        : TCsoundOperator(
-            InSettings, InPlayTrigger, InStopTrigger, InCsoundFile,
-            InAudioRefs, InNumOutAudioChannels, InControlRefs, InNumOutControlChannels
-        )
-        { }
-
-        // WIP inline?
-        static const FNodeClassName GetClassName()
-        {
-            // WIP What is Audio? Could we change it to something like "Csound" instead?
-            return { TEXT("MetaCsound"), TEXT("Csound 4"), TEXT("Audio") };
-        }
-
-        static const FText GetDisplayName()
-        {
-            return LOCTEXT("MetaCsound_Node2DisplayName", "Csound 4");
-        }
-
-        static const FText GetDescription()
-        {
-            return LOCTEXT("MetaCsound_Node2Desc", "Csound 4 description");
-        }
-
-        static constexpr int32 NumAudioChannelsIn = 4;
-        static constexpr int32 NumAudioChannelsOut = 4;
-        static constexpr int32 NumControlChannelsIn = 4;
-        static constexpr int32 NumControlChannelsOut = 4;
-    };
-
-    class METACSOUND_API FCsoundNode4 : public FNodeFacade
-    {
-    public:
-        FCsoundNode4(const FNodeInitData& InitData) : FNodeFacade(InitData.InstanceName, InitData.InstanceID,
-            TFacadeOperatorClass<FCsoundOperator4>())
-        { }
-    };
-
-    // Register node
-    METASOUND_REGISTER_NODE(FCsoundNode4);
     
 }
 

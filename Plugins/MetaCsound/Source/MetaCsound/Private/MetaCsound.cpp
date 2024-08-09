@@ -9,7 +9,6 @@ void FMetaCsoundModule::StartupModule()
 {
 	FMetasoundFrontendRegistryContainer::Get()->RegisterPendingNodes();
 
-	//const FString LibExamplePath = FPaths::Combine(*BasePluginDir, TEXT("Source/ThirdParty/lib_win64_example.dll"));
 	const FString LibExamplePath = TEXT("C:/Program Files/Csound6_x64/bin/csound64.dll");
 
 	DynamicLibExampleHandle = FPlatformProcess::GetDllHandle(*LibExamplePath);
@@ -22,9 +21,6 @@ void FMetaCsoundModule::StartupModule()
 	{
 		UE_LOG(LogTemp, Fatal, TEXT("csound64.dll failed to load!"));
 	}
-
-	//Metasound::Editor::IMetasoundEditorModule& MetaSoundEditorModule = FModuleManager::LoadModuleChecked<Metasound::Editor::IMetasoundEditorModule>("MetaSoundEditor");
-	//MetaSoundEditorModule.RegisterPinType("TCHAR");
 	
 }
 
