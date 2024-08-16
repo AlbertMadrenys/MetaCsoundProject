@@ -9,10 +9,10 @@ nchnls_i = 2
 
 // THIS FILE IS THE **** REALLY ***** GOOD ONE
 
-chn_k "InK_0", 1 // Can read and write on the same control channel
-chn_k "InK_1", 1
-chn_k "OutK_0", 2
-chn_k "OutK_1", 2
+chn_k "InControl0", 1 // Can read and write on the same control channel
+chn_k "InControl1", 1
+chn_k "OutControl0", 2
+chn_k "OutControl1", 2
 
 instr 1
  	ain1, ain2 inch 1, 2		;access input signal from processing loop
@@ -21,13 +21,13 @@ instr 1
 	aosc1 = oscili(0.5, 1)+0.5
 	aosc2 = oscili(0.5, 1, -1, 0.5)+0.5
 	
-	kamp chnget "InK_0"
-	kamp2 chnget "InK_1"
+	kamp chnget "InControl0"
+	kamp2 chnget "InControl1"
 	//kamp init 0.5
 	//kamp2 init 0.5
 	
-	chnset kamp, "OutK_0"
-	chnset kamp2, "OutK_1"
+	chnset kamp, "OutControl0"
+	chnset kamp2, "OutControl1"
 	
 	out ain1*aosc1*(kamp), ain2*aosc2*0.2*kamp2		;multiply output of iscil by incoming signal
 endin
@@ -48,6 +48,8 @@ schedule(1, 0, -1);
 </CsScore>
 
 </CsoundSynthesizer>
+
+
 
 
 
