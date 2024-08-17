@@ -73,7 +73,7 @@ MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     ControlInNames.Empty(ControlInRefs.Num());
     for (int32 i = 0; i < ControlInRefs.Num(); i++)
     {
-        ControlInNames.Add("InControl" + FString::FromInt(i));
+        ControlInNames.Add("In Control " + FString::FromInt(i));
     }
 
     ControlOutRefs.Empty(InNumOutControlChannels);
@@ -81,7 +81,7 @@ MetaCsound::TCsoundOperator<DerivedOperator>::TCsoundOperator(
     for (int32 i = 0; i < InNumOutControlChannels; i++)
     {
         ControlOutRefs.Add(FFloatWriteRef::CreateNew());
-        ControlOutNames.Add("OutControl" + FString::FromInt(i));
+        ControlOutNames.Add("Out Control " + FString::FromInt(i));
     }
 }
 
