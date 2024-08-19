@@ -3,8 +3,6 @@
 #include "MetaCsound.h"
 #include "MetasoundFrontendRegistries.h"
 
-#define LOCTEXT_NAMESPACE "FMetaCsoundModule"
-
 void FMetaCsoundModule::StartupModule()
 {
 	FMetasoundFrontendRegistryContainer::Get()->RegisterPendingNodes();
@@ -29,18 +27,7 @@ void FMetaCsoundModule::ShutdownModule()
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 }
-
-#undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(FMetaCsoundModule, MetaCsound)
 
-// This caused a Link2001 error! Maybe if I solve this I'll be able to solve the other problems?
-/*
-namespace Metasound
-{
-	namespace StandardNodes
-	{
-		const FName Namespace = "UE";
-		const FName AudioVariant = "Audio";
-	}
-}*/
+
