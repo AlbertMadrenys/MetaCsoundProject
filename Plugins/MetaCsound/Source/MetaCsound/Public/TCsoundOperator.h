@@ -51,7 +51,7 @@ namespace MetaCsound
     using namespace Metasound;
 
     template<typename DerivedOperator>
-    class TCsoundOperator : public TExecutableOperator<DerivedOperator>
+    class METACSOUND_API TCsoundOperator : public TExecutableOperator<DerivedOperator>
     {
 
     protected:
