@@ -10,6 +10,8 @@ chn_k "In Control 0", 1
 instr 1
 	kamp chnget "In Control 0"
 	
+	kamp = (kamp*4)+0.5
+	
 	apink1 pinker
 	apink2 pinker
 	kcutfreq = oscili(30, 0.1) + 50 ;between 20 and 80
@@ -28,6 +30,8 @@ schedule(1, 0, -1);
 <CsScore>
 </CsScore>
 </CsoundSynthesizer>
+
+
 
 
 
