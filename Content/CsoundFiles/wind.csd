@@ -8,6 +8,7 @@ nchnls = 2
 chn_k "In Control 0", 1
 
 instr 1
+
 	kamp chnget "In Control 0"
 	
 	kamp = (kamp*4)+0.5
@@ -24,7 +25,7 @@ instr 1
 	outs atone1*kport, atone2*kport
 endin
 
-schedule(1, 0, -1);
+schedule(1, 0, -1)
 
 </CsInstruments>
 <CsScore>

@@ -5,49 +5,37 @@
 <CsInstruments>
 nchnls = 2
 nchnls_i = 2
-0dbfs=1
+0dbfs = 1
 
-// THIS FILE IS THE **** REALLY ***** GOOD ONE
-
-chn_k "In Control 0", 1 // Can read and write on the same control channel
+chn_k "In Control 0", 1
 chn_k "In Control 1", 1
 chn_k "Out Control 0", 2
 chn_k "Out Control 1", 2
 
 instr 1
- 	ain1, ain2 inch 1, 2		;access input signal from processing loop
- 	//ain1 inch 1
- 	//ain oscili 0.2, 440 
-	aosc1 = oscili(0.5, 1)+0.5
-	aosc2 = oscili(0.5, 1, -1, 0.5)+0.5
-	
-	kamp chnget "In Control 0"
-	kamp2 chnget "In Control 1"
-	//kamp init 0.5
-	//kamp2 init 0.5
-	
-	chnset kamp, "Out Control 0"
-	chnset kamp2, "Out Control 1"
-	
-	out ain1*aosc1*(kamp), ain2*aosc2*0.2*kamp2		;multiply output of iscil by incoming signal
-endin
+ 	ain0, ain1 inch 1, 2		;access input signal from processing loop
 
-instr 2
-pset 2, 0, 1, 220
-aout vco2 0.05, p4
-outs aout, aout
+	aosc0 = oscili(0.5, 1)+0.5
+	aosc1 = oscili(0.5, 1, -1, 0.5)+0.5
+	
+	kamp0 chnget "In Control 0"
+	kamp1 chnget "In Control 1"
+	
+	chnset kamp0, "Out Control 0"
+	chnset kamp1, "Out Control 1"
+	
+	out ain0*aosc0*(kamp0), ain1*aosc1*0.2*kamp1		;multiply output of iscil by incoming signal
 endin
 
 schedule(1, 0, -1);
-//schedule(2, 0, 3)
 
 </CsInstruments>
 <CsScore>
-//i2 0 3
-//f0 z
 </CsScore>
 
 </CsoundSynthesizer>
+
+
 
 
 
