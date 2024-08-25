@@ -37,7 +37,9 @@ Using
 Using MetaCsound is straightforward. In your MetaSounds graph, simply add one of the available Csound nodes.
 All nodes have a similar layout, differing only in the number of input and output audio and control channels.
 
-<img src="images/CsoundNodeLayout.png" alt="Csound node layout" width="50%">
+<div style="text-align: center;">
+    <img src="images/CsoundNodeLayout.png" alt="Csound node layout" width="30%">
+</div>
 
 - **Play**: Compiles the Csound file and starts performing. If an error occurs, a message will appear in the console.\
 Triggering Play again will restart the performance.
