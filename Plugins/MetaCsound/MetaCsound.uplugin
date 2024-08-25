@@ -18,7 +18,15 @@
 		{
 			"Name": "MetaCsound",
 			"Type": "Runtime",
-			"LoadingPhase": "PostDefault"
+			"LoadingPhase": "PostDefault",
+			"PlatformAllowList": [
+				"Win64"
+			],
+			"PlatformDenyList": [
+				"IOS",
+				"Linux",
+				"Android"
+			]
 		}
 	],
 	"Plugins": [
