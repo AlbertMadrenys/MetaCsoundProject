@@ -37,38 +37,36 @@ Using
 Using MetaCsound is straightforward. In your MetaSounds graph, simply add one of the available Csound nodes.
 All nodes have a similar layout, differing only in the number of input and output audio and control channels.
 
-<div style="text-align: center;">
-    <img src="images/CsoundNodeLayout.png" alt="Csound node layout" width="30%">
-</div>
+<img src="images/CsoundNodeLayout.png" alt="Csound node layout" width="30%">
 
-- **Play**: Compiles the Csound file and starts performing. If an error occurs, a message will appear in the console.\
+- **Play**: Compiles the Csound file and starts performing. If an error occurs, a message will appear in the console.
 Triggering Play again will restart the performance.
 
 - **Stop**: Stops the Csound performance. This will trigger `On Finished`.
 
-- **On Finished**: Triggered when the performance stops, either due to a `Stop` trigger or the Csound performance ending.\
+- **On Finished**: Triggered when the performance stops, either due to a `Stop` trigger or the Csound performance ending.
 To keep the performance running continuously, add `f0 z` to the score section of your `.csd` file.
 
-- **File**: The name of the `.csd `file to be performed. This file must be placed in the `CsoundFiles` folder\
-within the `Content` folder of your project. Subdirectories are allowed and should be specified using the `/` character to\
+- **File**: The name of the `.csd `file to be performed. This file must be placed in the `CsoundFiles` folder
+within the `Content` folder of your project. Subdirectories are allowed and should be specified using the `/` character to
 indicate the relative path. Do not include the `.csd` extension in the filename. For example, specifying `Subdirectory/Test`
 corresponds to the file `/Content/CsoundFiles/Subdirectory/Test.csd`.
 
-- **In Audio X**: Input audio channel. The number of input channels in the `.csd` file is determined by defining `nchnls_i`,\
-or defaults to `nchnls` if not explicitly defined. Csound can handle fewer channels than the node allows but cannot handle more.\
-Use a MetaSound node with more audio inputs if needed. In the `.csd` files, input audio channels can be accessed using\
+- **In Audio X**: Input audio channel. The number of input channels in the `.csd` file is determined by defining `nchnls_i`,
+or defaults to `nchnls` if not explicitly defined. Csound can handle fewer channels than the node allows but cannot handle more.
+Use a MetaSound node with more audio inputs if needed. In the `.csd` files, input audio channels can be accessed using
 opcodes like `in` or `ins`.
 
-- **Out Audio X**: Output audio channel. The number of output channels in the `.csd` file is determined by defining `nchnls`.\
-Csound can handle fewer channels than the node allows but cannot handle more. Use a MetaSound node with more audio outputs\
+- **Out Audio X**: Output audio channel. The number of output channels in the `.csd` file is determined by defining `nchnls`.
+Csound can handle fewer channels than the node allows but cannot handle more. Use a MetaSound node with more audio outputs
 if needed. In the `.csd` files, output audio channels can be written using opcodes like `out` or `outs`.
 
-- **In Control X**: Input control channel. The control channel can be accessed from Csound using a control bus, defined with\
-the same name as the corresponding MetaSounds pin. Define it in Csound using `chn_k "In Control X", 1`, where X is the input number.\
+- **In Control X**: Input control channel. The control channel can be accessed from Csound using a control bus, defined with
+the same name as the corresponding MetaSounds pin. Define it in Csound using `chn_k "In Control X", 1`, where X is the input number.
 The value can be read using the opcode `chnget`.
 
-- **Out Control X**: Output control channel. The control channel can be accessed from Csound using a control bus, defined with\
- the same name as the corresponding MetaSounds pin. Define it in Csound using `chn_k "Out Control X", 2`, where X is the output number.\
+- **Out Control X**: Output control channel. The control channel can be accessed from Csound using a control bus, defined with
+ the same name as the corresponding MetaSounds pin. Define it in Csound using `chn_k "Out Control X", 2`, where X is the output number.
  The value can be written using the opcode `chnset`.
 
 Examples
