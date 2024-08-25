@@ -56,7 +56,7 @@ namespace MetaCsound
 
         static const FText GetDescription()
         {
-            return LOCTEXT("NodeDesc", "Csound with quadraphonic input and output");
+            return LOCTEXT("NodeDesc", "Csound performance with quadraphonic input and output.");
         }
 
         static constexpr int32 NumAudioChannelsIn = 4;

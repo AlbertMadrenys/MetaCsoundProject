@@ -37,15 +37,23 @@ namespace MetaCsound
 
     namespace NodeParams
     {
-        METASOUND_PARAM(PlayTrig, "Play", "Starts playing Csound");
-        METASOUND_PARAM(StopTrig, "Stop", "Stops the Csound performace");
-        METASOUND_PARAM(CsoundFile, "File", "Name of the .csd file to be executed by Csound");
-        METASOUND_PARAM(FinTrig, "On Finished", "Triggers when the Csound score has finished");
+        METASOUND_PARAM(PlayTrig, "Play",
+            "Compiles the Csound file and starts performing.");
+        METASOUND_PARAM(StopTrig, "Stop",
+            "Stops the Csound performance.");
+        METASOUND_PARAM(CsoundFile, "File",
+            "The name of the `.csd `file to be performed. This file must be placed in the CsoundFiles folder.");
+        METASOUND_PARAM(FinTrig, "On Finished",
+            "Triggered when the performance stops, either due to a Stop trigger or the Csound performance ending.");
 
-        METASOUND_PARAM(InA, "In Audio {0}", "Input audio {0}");
-        METASOUND_PARAM(OutA, "Out Audio {0}", "Output audio {0}");
-        METASOUND_PARAM(InK, "In Control {0}", "Input control {0}");
-        METASOUND_PARAM(OutK, "Out Control {0}", "Output control {0}");
+        METASOUND_PARAM(InA, "In Audio {0}",
+            "Input audio channel {0}. Can be accessed in Csound using opcodes like \'in\' or \'ins\'.");
+        METASOUND_PARAM(OutA, "Out Audio {0}",
+            "Output audio channel {0}. Can be accessed in Csound using opcodes like \'out\' or \'outs\'.");
+        METASOUND_PARAM(InK, "In Control {0}",
+            "Input control channel {0}. Corresponds to the Csound control bus with the same name.");
+        METASOUND_PARAM(OutK, "Out Control {0}",
+            "Output control channel {0}. Corresponds to the Csound control bus with the same name.");
     }
 
     using namespace Metasound;
