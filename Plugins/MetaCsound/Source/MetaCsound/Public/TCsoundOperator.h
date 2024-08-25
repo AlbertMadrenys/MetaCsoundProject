@@ -186,17 +186,11 @@ namespace MetaCsound
 
                 if (++SpIndex >= CsoundKsmps)
                 {
-                    for (int32 i = 0; i < ControlInRefs.Num(); i++)
-                    {
-                        // TODO: Use FString::Format instead of keeping the strings in an array?
-                        CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*ControlInNames[i]).Get(), (double)*(ControlInRefs[i]));
-                    }
-
+                    SetInputControlChannels();
                     CsoundPerformKsmps(f);
-
-                    for (int32 i = 0; i < ControlOutRefs.Num() && OpState == EOpState::Playing; i++)
+                    if (OpState == EOpState::Playing)
                     {
-                        *(ControlOutRefs[i]) = (float)CsoundInstance.GetControlChannel(StringCast<ANSICHAR>(*ControlOutNames[i]).Get());
+                        GetOutputControlChannels();
                     }
                 }
             }
@@ -427,7 +421,12 @@ namespace MetaCsound
             CsoundKsmps = (uint32)CsoundInstance.GetKsmps();
             FirstClearedFrame = OpSettings.GetNumFramesPerBlock();
 
+            SetInputControlChannels();
             CsoundPerformKsmps(CurrentFrame);
+            if (OpState == EOpState::Playing)
+            {
+                GetOutputControlChannels();
+            }
         }
 
 
@@ -476,6 +475,25 @@ namespace MetaCsound
             if (CsoundInstance.PerformKsmps() != 0)
             {
                 Stop(CurrentFrame);
+            }
+        }
+
+        void SetInputControlChannels()
+        {
+            for (int32 i = 0; i < ControlInRefs.Num(); i++)
+            {
+                // TODO: Use FString::Format instead of keeping the strings in an array?
+                CsoundInstance.SetControlChannel(StringCast<ANSICHAR>(*ControlInNames[i]).Get(), (double)*(ControlInRefs[i]));
+            }
+
+            
+        }
+
+        void GetOutputControlChannels()
+        {
+            for (int32 i = 0; i < ControlOutRefs.Num(); i++)
+            {
+                *(ControlOutRefs[i]) = (float)CsoundInstance.GetControlChannel(StringCast<ANSICHAR>(*ControlOutNames[i]).Get());
             }
         }
     };
