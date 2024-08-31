@@ -16,7 +16,6 @@ Currently, it is only compatible with Windows machines.
 
 1. **Install MetaSounds Plugin**: First, you need to install the MetaSounds plugin in your project, since MetaCsound
 depends on it. You can do this by searching for it in **Edit -> Plugin Manager**.
-This can be done by searching the name in Edit -> Plugin Manager.
 
 2. **Ensure Csound is Installed**: Make sure that the correct version of Csound is installed in the default location.
 
