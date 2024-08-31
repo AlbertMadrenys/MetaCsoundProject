@@ -75,13 +75,6 @@ Their corresponding `.csd` files are in `Content/CsoundFiles`.
 
 Packaging your game
 ----------------------------------------------
-The Csound .dll file will not be packaged with the game. This means new users will have to install Csound by other means.
-
-Before packaging the game, an extra configuration must be done. In the editor, go to:
-	Edit -> Project -> Settings -> Packaging -> Additional Non-Asset Directories To Copy.
-This option is an array that by default will be empty. Add a new element with their value being "CsoundFiles".
-This is needed in order to package your CSD files.
-
 The Csound .dll file is not included in the packaged game. This means new users will need to install Csound separately.
 
 Before packaging the game, an additional configuration is required. In the Editor, go to
