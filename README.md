@@ -77,7 +77,7 @@ This examples have video demos. You can find them [here](https://youtube.com/pla
 
 Packaging your game
 ----------------------------------------------
-The Csound .dll file is not included in the packaged game. This means new users will need to install Csound separately.
+The `Csound.dll` file is not included in the packaged game. This means new users will need to install Csound separately.
 
 Before packaging the game, an additional configuration is required. In the Editor, go to
 `Edit -> Project -> Settings -> Packaging -> Additional Non-Asset Directories To Copy`. This option is an array that
