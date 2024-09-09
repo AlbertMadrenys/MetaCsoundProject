@@ -73,6 +73,8 @@ Examples
 Examples can be found in this repository. Three MetaSound graphs are located in `Content/MetaSounds`.
 Their corresponding `.csd` files are in `Content/CsoundFiles`.
 
+This examples have video demos. You can find them [here](https://youtube.com/playlist?list=PLNpyzkzoPxMEw-t_9TPG27a5hapZB9DEF&feature=shared).
+
 Packaging your game
 ----------------------------------------------
 The Csound .dll file is not included in the packaged game. This means new users will need to install Csound separately.
